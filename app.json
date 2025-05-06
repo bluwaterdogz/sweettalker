@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "BountyDate",
-    "slug": "BountyDate",
+    "name": "SweetTalker",
+    "slug": "SweetTalker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,9 +13,14 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "This app needs access to your audio to record to text.",
+        "NSSpeechRecognitionUsageDescription": "This app uses your speech to text to record voice to text."
+      }
     },
     "android": {
+      "permissions": ["RECORD_AUDIO"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
