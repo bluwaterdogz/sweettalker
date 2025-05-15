@@ -9,6 +9,7 @@ export type RootStackParamList = {
   Translation: undefined;
   ForgotPassword: undefined;
   Billing: undefined;
+  Reframing: undefined;
 };
 
 export type RootStackNavigationProp =

@@ -1,10 +1,16 @@
-import React from "react";
-import { View, StyleSheet, Text } from "react-native";
+import React, { useCallback, useMemo } from "react";
+import { StyleSheet, Text } from "react-native";
 import { useTheme } from "@/theme";
-import { format } from "date-fns";
-import { Translation, UserMessage } from "../api/models";
-import { Loader } from "@/components/common/Loader";
+import { Translation } from "../api/models";
 import { Colors } from "@/theme/colors";
+import { useAppDispatch } from "@/store";
+import { updateTranslationText } from "../thunks";
+import { useToast } from "@/lib/toast";
+import { useServices } from "@/services/context";
+import { updateTranslation } from "../thunks";
+import { EditableText, Loader, CardContent } from "@/components/common";
+import { formatDate } from "@/lib/utils";
+import { UserMessage } from "@/features/common-interpretation/api/models";
 
 interface TranslationCardContentProps {
   translation: Translation;
@@ -16,81 +22,76 @@ export const TranslationCardContent: React.FC<TranslationCardContentProps> = ({
   userMessage,
 }) => {
   const { colors, typography } = useTheme();
+  const { showToast } = useToast();
+  const { translationService } = useServices();
   const styles = getStyles(colors);
+  const dispatch = useAppDispatch();
 
-  const timestamp = Date.now();
-  const formattedDate = format(new Date(timestamp), "MMM d, yyyy h:mm a");
-  const author = "AI Assistant";
+  const formattedDate = useMemo(
+    () => formatDate(translation.createdAt),
+    [translation.createdAt]
+  );
+
+  const onUpdateTranslationText = useCallback(
+    async (text: string) => {
+      try {
+        await dispatch(
+          updateTranslationText({
+            id: translation.id,
+            text: text,
+          })
+        );
+        showToast({ type: "success", message: "Translation saved" });
+      } catch (error) {
+        console.error("Translation update error:", error);
+      }
+    },
+    [translationService, translation.id, showToast]
+  );
 
   return (
-    <View style={[styles.container]}>
-      <View style={[styles.header]}>
-        <Text style={[typography.titleMedium, { color: colors.text.primary }]}>
-          {translation.modality}
-        </Text>
-      </View>
-      <View style={styles.content}>
-        <Text style={[typography.bodySmall, { color: colors.text.secondary }]}>
-          {formattedDate}
-        </Text>
+    <CardContent style={styles.content}>
+      <Text style={[typography.bodySmall, { color: colors.text.secondary }]}>
+        {formattedDate}
+      </Text>
+      <EditableText
+        value={translation.text}
+        onChange={onUpdateTranslationText}
+      />
+      <Text style={[typography.bodySmall, { color: colors.text.secondary }]}>
+        Original:{" "}
+        {userMessage?.text != undefined ? userMessage.text : <Loader />}
+      </Text>
+      <Text style={[typography.bodySmall, styles.text]}>
+        Description: {translation.description}
+      </Text>
 
-        <Text style={[typography.bodySmall, { color: colors.text.secondary }]}>
-          original:{" "}
-          {userMessage?.text != undefined ? userMessage.text : <Loader />}
-        </Text>
-        <Text
-          style={[
-            typography.bodyMedium,
-            styles.text,
-            { color: colors.text.primary },
-          ]}
-        >
-          {translation.text}
-        </Text>
-        <Text style={[typography.labelSmall, { color: colors.text.secondary }]}>
-          by {author}
-        </Text>
-      </View>
-    </View>
+      <Text style={[typography.labelSmall, { color: colors.text.secondary }]}>
+        Notes:
+      </Text>
+      <EditableText
+        style={[typography.labelSmall, { color: colors.text.secondary }]}
+        value={translation.notes || ""}
+        onChange={(text: string) =>
+          dispatch(updateTranslation({ id: translation.id, notes: text }))
+        }
+      />
+    </CardContent>
   );
 };
 
 const getStyles = (colors: Colors) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background.paper,
-      borderRadius: 12,
-      shadowColor: colors.neutral[900],
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
-    },
-    header: {
-      maxWidth: "95%",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.neutral[200],
-      backgroundColor: colors.background.paper,
-    },
     content: {
       flex: 1,
+      display: "flex",
       gap: 8,
-      padding: 16,
+      flexDirection: "column",
       justifyContent: "space-between",
-      backgroundColor: colors.background.paper,
     },
+    description: {},
     text: {
       marginVertical: 4,
       color: colors.text.primary,
-    },
-    flipButton: {
-      padding: 8,
-      borderRadius: 20,
-      backgroundColor: colors.background.paper,
     },
   });

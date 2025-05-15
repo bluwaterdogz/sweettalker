@@ -36,3 +36,6 @@ yarn-error.*
 *.tsbuildinfo
 
 .env
+
+/src/features/translation/prompts.ts
+**/prompts.ts

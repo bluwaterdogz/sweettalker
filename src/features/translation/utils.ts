@@ -1,7 +1,8 @@
-import { MODALITIES } from "./consts";
-import { Model, RelationalContext } from "./enums";
+import { translationModalities } from "./consts";
+import { RelationalContext } from "./enums";
 import { generatePromptGPT3_5 } from "./prompts";
 import { generatePromptGPT4 } from "./prompts";
+import { Model } from "@/features/common-interpretation/api/enums";
 
 // todo, check this package
 // import { encoding_for_model } from "@dqbd/tiktoken";
@@ -17,34 +18,6 @@ import { generatePromptGPT4 } from "./prompts";
 
 export function estimateTokensRough(text: string): number {
   return Math.ceil(text.length / 4); // very rough approximation
-}
-
-/**
- * Attempts to extract and parse a JSON array from a GPT response.
- * Works even if the model returns explanations, labels, or markdown.
- */
-
-export function safeJsonParseGPT(responseText: string): any[] | null {
-  try {
-    // Step 1: Try direct JSON parse first
-    const direct = JSON.parse(responseText);
-    if (Array.isArray(direct)) return direct;
-  } catch {}
-
-  // Step 2: Extract content between first "[" and last "]"
-  const startIdx = responseText.indexOf("[");
-  const endIdx = responseText.lastIndexOf("]");
-  if (startIdx === -1 || endIdx === -1 || endIdx <= startIdx) return null;
-
-  const sliced = responseText.slice(startIdx, endIdx + 1);
-
-  try {
-    const parsed = JSON.parse(sliced);
-    return Array.isArray(parsed) ? parsed : null;
-  } catch (err) {
-    console.warn("Safe JSON parse failed:", err);
-    return null;
-  }
 }
 
 type PromptOptions = {
@@ -64,12 +37,14 @@ export const generatePromptFunctionMap: Record<
 
 export function generateRelationalPrompt({
   userMessage,
-  modalities = MODALITIES.map((m) => m.id),
+  modalities = Object.values(translationModalities).map((m) => m.id),
   context,
   model = Model.Gpt3_5,
 }: PromptOptions): string {
-  const selected = MODALITIES.filter((m) => modalities.includes(m.id));
-  const identifiers = selected.map((m) => `- ${m.identifier}`).join("\n");
+  const selected = Object.values(translationModalities).filter((m) =>
+    modalities.includes(m.id)
+  );
+  const identifiers = selected.map((m) => `- ${m.id}`).join("\n");
 
   const contextLine = context
     ? `This is in the context of a ${context} relationship.`

@@ -1,42 +1,35 @@
-import { generatePromptGPT4, generatePromptGPT3_5 } from "./prompts";
-import { ModalityLabel, ModalityIdentifier, Model } from "./enums";
+import { ModalityLabel, ModalityIdentifier } from "./enums";
 import { Modality } from "./api/models";
 
-export const MODALITIES: Modality[] = [
-  {
-    id: "nvc",
+export const translationModalities: Record<ModalityIdentifier, Modality> = {
+  [ModalityIdentifier.NonviolentCommunication]: {
+    id: ModalityIdentifier.NonviolentCommunication,
     label: ModalityLabel.NonviolentCommunication,
     originator: "Marshall Rosenberg",
-    identifier: ModalityIdentifier.NonviolentCommunication,
   },
-  {
-    id: "imago",
+  [ModalityIdentifier.ImagoRelationshipTherapy]: {
+    id: ModalityIdentifier.ImagoRelationshipTherapy,
     label: ModalityLabel.ImagoRelationshipTherapy,
     originator: "Harville Hendrix & Helen LaKelly Hunt",
-    identifier: ModalityIdentifier.ImagoRelationshipTherapy,
   },
-  {
-    id: "circling",
+  [ModalityIdentifier.Circling]: {
+    id: ModalityIdentifier.Circling,
     label: ModalityLabel.Circling,
     originator: "Guy Sengstock and others",
-    identifier: ModalityIdentifier.Circling,
   },
-  {
-    id: "ar",
+  [ModalityIdentifier.AuthenticRelating]: {
+    id: ModalityIdentifier.AuthenticRelating,
     label: ModalityLabel.AuthenticRelating,
     originator: "AR community practices",
-    identifier: ModalityIdentifier.AuthenticRelating,
   },
-  {
-    id: "ci",
+  [ModalityIdentifier.CompassionateInquiry]: {
+    id: ModalityIdentifier.CompassionateInquiry,
     label: ModalityLabel.CompassionateInquiry,
     originator: "Dr. Gabor Maté",
-    identifier: ModalityIdentifier.CompassionateInquiry,
   },
-  {
-    id: "rh",
+  [ModalityIdentifier.RadicalHonesty]: {
+    id: ModalityIdentifier.RadicalHonesty,
     label: ModalityLabel.RadicalHonesty,
     originator: "Brad Blanton",
-    identifier: ModalityIdentifier.RadicalHonesty,
   },
-];
+};

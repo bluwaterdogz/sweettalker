@@ -1,43 +1,22 @@
 import React from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { useTheme } from "@/theme";
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { faUser } from "@fortawesome/free-solid-svg-icons";
-
-import { ProfileSettings } from "./ProfileSettings";
-import { isFeatureEnabled } from "@/config/featureFlags";
-import { useUser as useFirebaseUser } from "@/features/firebase-auth/hooks/useUser";
-import { useUser as useLegacyUser } from "@/features/auth/hooks/useUser";
+import { useUser } from "@/features/firebase-auth/hooks/useUser";
 import { ProfileTabs } from "./ProfileTabs";
+import { UserDetails } from "@/components/app";
 
-export const Profile = () => {
-  const { colors, typography } = useTheme();
-  const useFirebaseAuth = isFeatureEnabled("USE_FIREBASE_AUTH");
-  const firebaseUser = useFirebaseUser();
-  const legacyUser = useLegacyUser();
-  const user = useFirebaseAuth ? firebaseUser : legacyUser;
+export const ProfileScreen = () => {
+  const { colors } = useTheme();
+  const user = useUser();
 
   return (
     <View
       style={[styles.container, { backgroundColor: colors.background.default }]}
     >
-      <View style={styles.header}>
-        <FontAwesomeIcon icon={faUser} size={60} color={colors.primary.main} />
-        <View style={styles.userInfo}>
-          <Text
-            style={[typography.headingLarge, { color: colors.text.primary }]}
-          >
-            {user?.username || user?.email}
-          </Text>
-          <Text
-            style={[typography.bodyMedium, { color: colors.text.secondary }]}
-          >
-            {user?.email}
-          </Text>
-        </View>
+      <View style={styles.header}>{user && <UserDetails user={user} />}</View>
+      <View style={{ flex: 1 }}>
+        <ProfileTabs />
       </View>
-
-      <ProfileTabs />
     </View>
   );
 };
@@ -45,14 +24,11 @@ export const Profile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    display: "flex",
+    flexDirection: "column",
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  userInfo: {
-    marginLeft: 20,
+    padding: 16,
+    height: 100,
   },
 });

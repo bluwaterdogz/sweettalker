@@ -1,6 +1,3 @@
-import { isFeatureEnabled } from "@/config/featureFlags";
-import { LoginForm } from "@/features/auth/components/login-form";
-import { RegisterForm } from "@/features/auth/components/register-form";
 import { FirebaseLoginForm } from "@/features/firebase-auth/components/login-form";
 import { FirebaseRegisterForm } from "@/features/firebase-auth/components/register-form";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -17,18 +14,12 @@ export const AuthStack = () => {
     >
       <Stack.Screen
         name="Register"
-        component={
-          isFeatureEnabled("USE_FIREBASE_AUTH")
-            ? FirebaseRegisterForm
-            : RegisterForm
-        }
+        component={FirebaseRegisterForm}
         options={{ title: "Register" }}
       />
       <Stack.Screen
         name="Login"
-        component={
-          isFeatureEnabled("USE_FIREBASE_AUTH") ? FirebaseLoginForm : LoginForm
-        }
+        component={FirebaseLoginForm}
         options={{ title: "Login" }}
       />
     </Stack.Navigator>

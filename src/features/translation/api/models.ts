@@ -1,47 +1,29 @@
+import { Interpretation } from "@/features/common-interpretation/api/models";
 import {
   ModalityIdentifier,
   ModalityLabel,
 } from "@/features/translation/enums";
 
 // View Models
-export interface Moderation {
-  isFlagged: boolean;
-  categories: Record<string, boolean>;
+export interface Edit {
+  text: string;
+  createdAt: Date;
+  id: string;
 }
 
-export interface Translation {
-  id: string;
-  modality: ModalityIdentifier;
-  model: string;
-  text: string;
-  description: string;
-  userMessageId: string;
-  createdAt: Date | null;
-  createdBy: string | null;
-  rating: number | null;
-  favorite: boolean | null;
+export interface Translation extends Interpretation {
+  modality: Modality;
+  priorEdits: Edit[];
+  notes?: string;
 }
 
 export interface Modality {
-  id: string;
+  id: ModalityIdentifier;
   label: ModalityLabel;
   originator: string;
-  identifier: ModalityIdentifier;
-}
-
-// I am adding a new interface for persisting user messages with metadata.
-export interface UserMessage {
-  id: string;
-  text: string;
-  createdAt: Date;
 }
 
 // API Models
-export interface ModerationApi {
-  flagged: boolean;
-  categories: Record<string, boolean>;
-}
-
 export interface TranslationApi {
   modality: ModalityIdentifier;
   text: string;
@@ -54,12 +36,6 @@ export interface TranslationVersion {
   translationId: string; // The id of the translation this version belongs to
   data: Partial<Translation>; // Snapshot of changed translation fields
   versionedAt: Date;
-}
-
-export interface UserMessageApi {
-  id: string;
-  text: string;
-  createdAt: Date;
 }
 
 export interface SubsctiptionOptions {

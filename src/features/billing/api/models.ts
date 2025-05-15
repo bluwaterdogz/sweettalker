@@ -1,5 +1,3 @@
-import { IAPItemDetails } from "expo-in-app-purchases";
-
 export interface TranslationCredit {
   id: string;
   userId: string;

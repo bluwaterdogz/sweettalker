@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useServices } from "@/services/provider";
+import { useServices } from "@/services/context";
 import { BillingProduct, BillingState, DEFAULT_PRODUCTS } from "../api/models";
 import { useToast } from "@/lib/toast";
 
@@ -13,7 +13,7 @@ const BillingContext = createContext<BillingContextType | undefined>(undefined);
 export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { billingService } = useServices();
+  const { billingService } = useServices() as any;
   const { showToast } = useToast();
   const [state, setState] = useState<BillingState>({
     products: DEFAULT_PRODUCTS,

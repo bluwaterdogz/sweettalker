@@ -6,8 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import { RootStackNavigationProp } from "@/navigation/types";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "@/components/common/Button";
-import { TextInput } from "@/components/common/TextInput";
+import { Button, TextInput } from "@/components/common";
 import { useToast } from "@/lib/toast";
 
 interface RegisterFormProps {}
@@ -17,7 +16,7 @@ export const FirebaseRegisterForm = (props: RegisterFormProps) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const { error, loading } = useAppSelector((state) => state.firebaseAuth);
+  const { loading } = useAppSelector((state) => state.firebaseAuth);
 
   const dispatch = useAppDispatch();
   const navigation = useNavigation<RootStackNavigationProp>();

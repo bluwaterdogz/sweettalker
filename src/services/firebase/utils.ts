@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export function removeUndefined(obj: any) {
   return Object.fromEntries(
     Object.entries(obj).map(([key, value]) =>
@@ -5,3 +7,7 @@ export function removeUndefined(obj: any) {
     )
   );
 }
+
+export const toDatestring = (date?: Timestamp) => {
+  return date?.toDate().toLocaleDateString() || "in progress!";
+};

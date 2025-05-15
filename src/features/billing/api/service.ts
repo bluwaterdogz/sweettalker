@@ -1,6 +1,7 @@
-import { FirebaseService } from "@/services/firebase/types";
-import { FirestoreCollections } from "@/store/collections";
-import * as InAppPurchases from "expo-in-app-purchases";
+import { FirebaseService } from "@/services/firebase/service";
+import { FirestoreCollections } from "@/services/firebase/collections";
+// import * as InAppPurchases from "expo-in-app-purchases";
+
 import {
   BillingProduct,
   DEFAULT_PRODUCTS,
@@ -9,8 +10,15 @@ import {
   TranslationCreditApi,
 } from "./models";
 
+// TODO: eject from expo and use native module
+const InAppPurchases: any = {
+  connectAsync: async () => {},
+  getProductsAsync: async () => [],
+  purchaseItemAsync: async () => ({ responseCode: 0, results: [] }),
+};
+
 export class BillingService {
-  constructor(private firebaseService: FirebaseService) {}
+  constructor(private firebaseService: any) {}
 
   async initialize(): Promise<void> {
     try {
@@ -33,7 +41,7 @@ export class BillingService {
         // Update prices from store
         return DEFAULT_PRODUCTS.map((product) => {
           const storeProduct = results.find(
-            (p) => p.productId === product.productId
+            (p: any) => p.productId === product.productId
           );
           if (storeProduct) {
             return {
@@ -99,27 +107,27 @@ export class BillingService {
     }
   }
 
-  async getCredits(): Promise<number> {
-    try {
-      const userId = this.firebaseService.getCurrentUserId();
-      const credits =
-        await this.firebaseService.getUserCollection<TranslationCreditApi>(
-          FirestoreCollections.TRANSLATION_CREDITS
-        );
+  // async getCredits(): Promise<number> {
+  //   try {
+  //     const userId = this.firebaseService.getCurrentUserId();
+  //     const credits =
+  //       await this.firebaseService.getUserCollection<TranslationCreditApi>(
+  //         FirestoreCollections.TRANSLATION_CREDITS
+  //       );
 
-      // Sum up all non-expired credits
-      const now = new Date();
-      return credits
-        .filter((credit) => credit.userId === userId)
-        .filter(
-          (credit) => !credit.expiresAt || new Date(credit.expiresAt) > now
-        )
-        .reduce((sum, credit) => sum + credit.amount, 0);
-    } catch (error) {
-      console.error("Error getting credits:", error);
-      return 0;
-    }
-  }
+  //     // Sum up all non-expired credits
+  //     const now = new Date();
+  //     return credits
+  //       .filter((credit) => credit.userId === userId)
+  //       .filter(
+  //         (credit) => !credit.expiresAt || new Date(credit.expiresAt) > now
+  //       )
+  //       .reduce((sum, credit) => sum + credit.amount, 0);
+  //   } catch (error) {
+  //     console.error("Error getting credits:", error);
+  //     return 0;
+  //   }
+  // }
 
   private async addCredits(amount: number): Promise<void> {
     try {
@@ -164,45 +172,45 @@ export class BillingService {
     }
   }
 
-  async useCredit(): Promise<boolean> {
-    try {
-      const userId = this.firebaseService.getCurrentUserId();
-      const credits =
-        await this.firebaseService.getUserCollection<TranslationCreditApi>(
-          FirestoreCollections.TRANSLATION_CREDITS
-        );
+  // async useCredit(): Promise<boolean> {
+  //   try {
+  //     const userId = this.firebaseService.getCurrentUserId();
+  //     const credits =
+  //       await this.firebaseService.getUserCollection<TranslationCreditApi>(
+  //         FirestoreCollections.TRANSLATION_CREDITS
+  //       );
 
-      // Find the oldest non-expired credit
-      const now = new Date();
-      const availableCredit = credits
-        .filter((credit) => credit.userId === userId)
-        .filter(
-          (credit) => !credit.expiresAt || new Date(credit.expiresAt) > now
-        )
-        .sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        )[0];
+  //     // Find the oldest non-expired credit
+  //     const now = new Date();
+  //     const availableCredit = credits
+  //       .filter((credit) => credit.userId === userId)
+  //       .filter(
+  //         (credit) => !credit.expiresAt || new Date(credit.expiresAt) > now
+  //       )
+  //       .sort(
+  //         (a, b) =>
+  //           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  //       )[0];
 
-      if (!availableCredit || availableCredit.amount <= 0) {
-        return false;
-      }
+  //     if (!availableCredit || availableCredit.amount <= 0) {
+  //       return false;
+  //     }
 
-      // Update the credit amount
-      await this.firebaseService.updateUserDocument(
-        FirestoreCollections.TRANSLATION_CREDITS,
-        availableCredit.id,
-        {
-          amount: availableCredit.amount - 1,
-        }
-      );
+  //     // Update the credit amount
+  //     await this.firebaseService.updateUserDocument(
+  //       FirestoreCollections.TRANSLATION_CREDITS,
+  //       availableCredit.id,
+  //       {
+  //         amount: availableCredit.amount - 1,
+  //       }
+  //     );
 
-      return true;
-    } catch (error) {
-      console.error("Error using credit:", error);
-      return false;
-    }
-  }
+  //     return true;
+  //   } catch (error) {
+  //     console.error("Error using credit:", error);
+  //     return false;
+  //   }
+  // }
 
   async hasActiveSubscription(): Promise<boolean> {
     try {
@@ -213,7 +221,7 @@ export class BillingService {
 
       const now = new Date();
       return subscriptions.some(
-        (sub) =>
+        (sub: any) =>
           sub.userId === userId &&
           sub.status === "active" &&
           new Date(sub.endDate) > now

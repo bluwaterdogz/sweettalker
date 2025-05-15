@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 
-export function useSubscribeFirestore<TResult>(
+export function useSubscribeFirestore<T>(
   subscribeFn: (
-    onData: (data: TResult) => void,
+    onData: (data: T) => void,
     onError?: (err: Error) => void
   ) => () => void,
   deps: any[] = []
 ) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<TResult | null>(null);
+  const [result, setResult] = useState<T | null>(null);
 
   useEffect(() => {
     setLoading(true);

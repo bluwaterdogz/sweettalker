@@ -1,21 +1,23 @@
 import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "@/features/auth/slice";
 import firebaseAuthReducer from "@/features/firebase-auth/slice";
 import translationReducer from "@/features/translation/slice";
+import reframingReducer from "@/features/reframing/slice";
+import voiceToTextReducer from "@/lib/voice-to-text/slice";
 import {
   TypedUseSelectorHook,
   useDispatch,
   useSelector,
   useStore,
 } from "react-redux";
-import { Services } from "@/services/provider";
+import { Services } from "@/services/base/types";
 
 export const createStore = (services: Services) => {
   return configureStore({
     reducer: {
-      auth: authReducer,
       firebaseAuth: firebaseAuthReducer,
       translation: translationReducer,
+      reframing: reframingReducer,
+      voiceToText: voiceToTextReducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
@@ -28,6 +30,15 @@ export const createStore = (services: Services) => {
 
 export type RootState = ReturnType<ReturnType<typeof createStore>["getState"]>;
 export type AppDispatch = ReturnType<typeof createStore>["dispatch"];
+
+export interface ThunkAPI {
+  state: RootState;
+  dispatch: AppDispatch;
+  rejectValue: string;
+  extra: {
+    services: Services;
+  };
+}
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

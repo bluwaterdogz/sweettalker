@@ -17,16 +17,16 @@ export const chatGPTApi = axios.create({
 });
 
 // if (logging === true) {
-chatGPTApi.interceptors.request.use((config) => {
-  console.log("➡️ Axios Request:", {
-    method: config.method,
-    url: config.url,
-    baseUrl: config.baseURL,
+// chatGPTApi.interceptors.request.use((config) => {
+//   console.log("➡️ Axios Request:", {
+//     method: config.method,
+//     url: config.url,
+//     baseUrl: config.baseURL,
 
-    data: config.data,
-  });
-  return config;
-});
+//     data: config.data,
+//   });
+//   return config;
+// });
 // authApi.interceptors.request.use((config) => {
 //   console.log("➡️ Axios Request:", {
 //     method: config.method,

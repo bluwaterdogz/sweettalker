@@ -1,5 +1,3 @@
-# SweetTalker
-
 ## What to do when Expo is ejected
 
 When you eject from Expo (to Bare workflow or a Custom Dev Client), you unlock access to native modules and can enable features not available in Expo Go. Here are the key steps and recommendations:

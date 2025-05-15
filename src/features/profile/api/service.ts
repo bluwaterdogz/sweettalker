@@ -1,5 +1,5 @@
-import { FirebaseService } from "@/services/firebase/types";
-import { FirestoreCollections } from "@/store/collections";
+import { FirebaseService } from "@/services/firebase/service";
+import { FirestoreCollections } from "@/services/firebase/collections";
 import { firebaseAuthService } from "@/features/firebase-auth/api/service";
 import {
   UserProfile,

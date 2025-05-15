@@ -1,41 +1,53 @@
-import { TranslationClient } from "./client";
+import { TranslationMapper } from "./mappers";
+import { Translation, TranslationApi } from "./models";
+import { FirestoreCollections } from "@/services/firebase/collections";
+import { FirebaseService } from "@/services/firebase/service";
+import { RelationalContext } from "../enums";
+import { generateRelationalPrompt } from "../utils";
+import { arrayUnion, DocumentReference } from "firebase/firestore";
+import { v4 as uuidv4 } from "uuid";
+import { InterpretationClient } from "@/features/common-interpretation/api/client";
 import {
-  ModerationMapper,
-  TranslationMapper,
-  UserMessageMapper,
-} from "./mappers";
-import {
-  Moderation,
-  Translation,
   UserMessage,
-  TranslationApi,
   UserMessageApi,
-} from "./models";
-import { ModerateTextParams, TranslateTextParams } from "./client";
-import { FirestoreCollections } from "@/store/collections";
-import { FirebaseServiceI } from "@/services/firebase/types";
-import { Model } from "../enums";
+} from "@/features/common-interpretation/api/models";
+import { UserMessageMapper } from "@/features/common-interpretation/api/mappers";
+import { Model } from "@/features/common-interpretation/api/enums";
+
+interface TranslateTextParams {
+  model: Model;
+  input: string;
+}
 
 export class TranslationService {
   constructor(
-    private client: TranslationClient,
-    private firebaseService: FirebaseServiceI
+    private client: InterpretationClient<TranslationApi>,
+    private firebaseService: FirebaseService
   ) {}
-
-  async moderateText(params: ModerateTextParams): Promise<Moderation> {
-    try {
-      const response = await this.client.moderateText(params);
-      return ModerationMapper.map(response);
-    } catch (error) {
-      console.error("Error moderating text:", error);
-      throw error;
-    }
-  }
 
   async translateText(params: TranslateTextParams): Promise<TranslationApi[]> {
     try {
-      const response = await this.client.translateText(params);
-      return response;
+      const { model, input } = params;
+
+      const moderation = await this.client.moderateText({
+        input,
+      });
+
+      if (moderation.flagged) {
+        throw new Error("User input flagged");
+      }
+
+      const prompt = generateRelationalPrompt({
+        userMessage: input,
+        model,
+        context: RelationalContext.Romantic,
+      });
+
+      const translations = await this.client.interpretText({
+        model,
+        input: prompt,
+      });
+      return translations;
     } catch (error) {
       console.error("Error translating text:", error);
       throw error;
@@ -66,21 +78,34 @@ export class TranslationService {
     }
   }
 
+  private async persistUserMessage(
+    text: string
+  ): Promise<DocumentReference<UserMessageApi> | undefined> {
+    try {
+      const userMessageDoc = await this.firebaseService.addUserDocument(
+        FirestoreCollections.USER_MESSAGES,
+        { text }
+      );
+      if (!userMessageDoc) {
+        throw new Error("Failed to persist user message");
+      }
+      return userMessageDoc;
+    } catch (error) {
+      console.error("Error persisting user message:", error);
+    }
+  }
+
   async persistUserMessageAndTranslations(
     userText: string,
     translations: TranslationApi[],
     { model }: { model: Model }
   ): Promise<void> {
     try {
-      // Persist the user message
-      const userMessageData: Omit<UserMessage, "id"> = {
-        text: userText,
-        createdAt: new Date(),
-      };
-      const userMessageDoc = await this.firebaseService.addUserDocument(
-        FirestoreCollections.USER_MESSAGES,
-        userMessageData
-      );
+      const userMessageDoc = await this.persistUserMessage(userText);
+
+      if (!userMessageDoc) {
+        throw new Error("Failed to persist user message");
+      }
 
       const userMessageId = userMessageDoc.id;
 
@@ -138,11 +163,31 @@ export class TranslationService {
     data: Partial<Translation>
   ): Promise<void> {
     try {
-      // Firestore path: users/{uid}/translations/{id}
       await this.firebaseService.updateUserDocument(
         FirestoreCollections.TRANSLATIONS,
         id,
         data
+      );
+    } catch (error) {
+      console.error("Error updating translation:", error);
+      throw error;
+    }
+  }
+
+  async updateTranslationText(id: string, text: string): Promise<void> {
+    try {
+      const newEdit = {
+        text,
+        createdAt: new Date(),
+        id: uuidv4(),
+      };
+      await this.firebaseService.updateUserDocument<Translation>(
+        FirestoreCollections.TRANSLATIONS,
+        id,
+        {
+          text,
+          priorEdits: arrayUnion(newEdit) as unknown as any[],
+        }
       );
     } catch (error) {
       console.error("Error updating translation:", error);

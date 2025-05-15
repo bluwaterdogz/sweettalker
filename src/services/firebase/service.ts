@@ -4,17 +4,21 @@ import {
   addDoc,
   getDocs,
   onSnapshot,
-  QuerySnapshot,
   DocumentData,
   Firestore,
   doc,
   updateDoc,
+  orderBy,
+  query,
+  serverTimestamp,
+  Query,
+  CollectionReference,
 } from "firebase/firestore";
 import { firebaseAuthService } from "@/features/firebase-auth/api/service";
-import { FirebaseServiceI } from "@/services/firebase/types";
+
 import { removeUndefined } from "@/services/firebase/utils";
 
-export class FirebaseService implements FirebaseServiceI {
+export class FirebaseService {
   async addDocument<T>(col: string, data: T, db: Firestore = firestore) {
     const cleanData = removeUndefined(data);
     console.log("cleanData", cleanData);
@@ -32,21 +36,25 @@ export class FirebaseService implements FirebaseServiceI {
     col: string,
     onData: (data: T[]) => void,
     onError?: (err: Error) => void,
-    db: Firestore = firestore
+    db: Firestore = firestore,
+    queryBuilder?: (
+      ref: CollectionReference<DocumentData>
+    ) => Query<DocumentData>
   ): () => void {
-    return onSnapshot(
-      collection(db, col),
-      (querySnapshot: QuerySnapshot<DocumentData>) => {
+    const q = queryBuilder
+      ? queryBuilder(collection(db, col))
+      : query(collection(db, col), orderBy("createdAt", "desc"));
+    return onSnapshot(q, {
+      next: (querySnapshot) => {
         const data: T[] = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as T[];
         onData(data);
       },
-      onError
-    );
+      error: onError,
+    });
   }
-
   private userCollectionPath(subCollection: string) {
     const userId = firebaseAuthService.getCurrentUserId();
     return `users/${userId}/${subCollection}`;
@@ -57,7 +65,15 @@ export class FirebaseService implements FirebaseServiceI {
     data: T,
     db: Firestore = firestore
   ) {
-    return this.addDocument(this.userCollectionPath(subCollection), data, db);
+    return this.addDocument(
+      this.userCollectionPath(subCollection),
+      {
+        ...data,
+        createdAt: serverTimestamp(),
+        createdBy: firebaseAuthService.getCurrentUserId(),
+      },
+      db
+    );
   }
 
   async getUserCollection<T>(
@@ -71,13 +87,17 @@ export class FirebaseService implements FirebaseServiceI {
     subCollection: string,
     onData: (data: T[]) => void,
     onError?: (err: Error) => void,
-    db: Firestore = firestore
+    db: Firestore = firestore,
+    queryBuilder?: (
+      ref: CollectionReference<DocumentData>
+    ) => Query<DocumentData>
   ): () => void {
     return this.subscribeToCollection<T>(
       this.userCollectionPath(subCollection),
       onData,
       onError,
-      db
+      db,
+      queryBuilder
     );
   }
 
@@ -88,6 +108,10 @@ export class FirebaseService implements FirebaseServiceI {
     db: Firestore = firestore
   ): Promise<void> {
     const docRef = doc(db, this.userCollectionPath(subCollection), docId);
-    await updateDoc(docRef, data as any);
+    await updateDoc(docRef, {
+      ...data,
+      updatedAt: serverTimestamp(),
+      updatedBy: firebaseAuthService.getCurrentUserId(),
+    });
   }
 }

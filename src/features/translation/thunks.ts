@@ -1,143 +1,73 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { generateRelationalPrompt } from "./utils";
-import { RelationalContext, Model } from "./enums";
-import { validateUserMessage } from "./api/validation";
-import type { Moderation } from "./api/models";
-import { setInputText } from "./slice";
+import type { Translation, TranslationApi } from "./api/models";
 import { ThunkAPI } from "@/store/types";
+import { handleError } from "@/services/base/errors";
+import { Model } from "../common-interpretation/api/enums";
 
-// const enrichedTranslations = [
-//   {
-//     createdAt: undefined,
-//     description:
-//       "This response focuses on expressing feelings and needs without blaming the other person, fostering understanding and connection.",
-//     favorite: undefined,
-//     modality: "Nonviolent Communication (NVC)",
-//     model: "gpt-3.5-turbo",
-//     rating: undefined,
-//     text: undefined,
-//     userMessageId: undefined,
-//   },
-//   {
-//     createdAt: undefined,
-//     description:
-//       "This response encourages empathy and connection by expressing a need for validation and understanding from the partner.",
-//     favorite: undefined,
-//     modality: "Imago Relationship Therapy (Imago)",
-//     model: "gpt-3.5-turbo",
-//     rating: undefined,
-//     text: undefined,
-//     userMessageId: undefined,
-//   },
-//   {
-//     createdAt: undefined,
-//     description:
-//       "This response invites open communication and exploration of the listener's perspective, fostering mutual understanding and emotional safety.",
-//     favorite: undefined,
-//     modality: "Authentic Relating (AR)",
-//     model: "gpt-3.5-turbo",
-//     rating: undefined,
-//     text: undefined,
-//     userMessageId: undefined,
-//   },
-// ];
-
-export const validateMessage = createAsyncThunk<Moderation, string, ThunkAPI>(
-  "translation/validateMessage",
-  async (message: string, { rejectWithValue, extra: { services } }) => {
-    try {
-      return await validateUserMessage(message, services.translationService);
-    } catch (error) {
-      return rejectWithValue(
-        error instanceof Error ? error.message : "Validation failed"
-      );
-    }
-  }
-);
-
-export const translateText = createAsyncThunk<any, string, ThunkAPI>(
+export const translateText = createAsyncThunk<
+  TranslationApi[],
+  string,
+  ThunkAPI
+>(
   "translation/translateText",
-  async (inputText: string, { rejectWithValue, extra: { services } }) => {
+  async (input: string, { rejectWithValue, extra: { services }, dispatch }) => {
     try {
       const model = Model.Gpt3_5;
 
-      // Validate the message first
-      const validationResult = await validateUserMessage(
-        inputText,
-        services.translationService
-      );
-      if (validationResult.isFlagged) {
-        return rejectWithValue("Message failed validation");
-      }
-
-      const prompt = generateRelationalPrompt({
-        userMessage: inputText,
-        model,
-        context: RelationalContext.Romantic,
-      });
-
       const translations = await services.translationService.translateText({
         model,
-        input: prompt,
+        input,
       });
 
-      // Persist the user message and its translations together
-      const enrichedTranslations =
-        await services.translationService.persistUserMessageAndTranslations(
-          inputText,
-          translations,
-          { model }
-        );
-
-      return enrichedTranslations;
-    } catch (error) {
-      return rejectWithValue(
-        error instanceof Error ? error.message : "An unknown error occurred"
+      await services.translationService.persistUserMessageAndTranslations(
+        input,
+        translations,
+        { model }
       );
+
+      return translations;
+    } catch (error) {
+      handleError(error, () => dispatch(translateText(input)));
+      return rejectWithValue(error as Error);
     }
   }
 );
 
-const Voice = {} as any;
-
-export const startVoiceInput = createAsyncThunk(
-  "translation/startVoiceInput",
-  async (_, { dispatch }) => {
+export const updateTranslation = createAsyncThunk<
+  void,
+  Partial<Translation> & Pick<Translation, "id">,
+  ThunkAPI
+>(
+  "translation/updateTranslation",
+  async (
+    translation: Partial<Translation> & Pick<Translation, "id">,
+    { rejectWithValue, extra: { services }, dispatch }
+  ) => {
     try {
-      // Start listening
-      await Voice.start("en-US");
-
-      // Set up event listeners
-      Voice.onSpeechResults = (e: any) => {
-        if (e.value && e.value.length > 0) {
-          const recognizedText = e.value[0];
-          dispatch(setInputText(recognizedText));
-        }
-      };
-
-      Voice.onSpeechError = (e: any) => {
-        console.error("Speech recognition error:", e);
-        throw new Error("Speech recognition failed");
-      };
-
-      return true;
+      await services.translationService.updateTranslation(
+        translation.id,
+        translation
+      );
     } catch (error) {
-      console.error("Error starting voice input:", error);
-      throw error;
+      handleError(error, () => dispatch(updateTranslation(translation)));
+      return rejectWithValue(error as Error);
     }
   }
 );
 
-export const stopVoiceInput = createAsyncThunk(
-  "translation/stopVoiceInput",
-  async () => {
+export const updateTranslationText = createAsyncThunk<
+  void,
+  { text: string; id: string },
+  ThunkAPI
+>(
+  "translation/updateTranslationText",
+  async ({ id, text }, { rejectWithValue, extra: { services }, dispatch }) => {
     try {
-      await Voice.stop();
-      Voice.removeAllListeners();
-      return true;
+      await services.translationService.updateTranslationText(id, text);
     } catch (error) {
-      console.error("Error stopping voice input:", error);
-      throw error;
+      // TODO: handle retry
+      handleError(error, () => dispatch(updateTranslationText({ id, text })));
+      return rejectWithValue(error as Error);
     }
   }
 );

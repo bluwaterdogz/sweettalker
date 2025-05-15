@@ -1,14 +1,18 @@
 import { TranslationList } from "@/features/translation/components/TranslationList";
 import { ProfileSettings } from "./ProfileSettings";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-
-const Tab = createBottomTabNavigator();
+import { Tabs } from "@/components/common";
 
 export const ProfileTabs = () => {
   return (
-    <Tab.Navigator>
-      <Tab.Screen name="Settings" component={ProfileSettings} />
-      <Tab.Screen name="History" component={TranslationList} />
-    </Tab.Navigator>
+    <Tabs
+      tabs={[
+        { id: "Settings", label: "Settings", content: <ProfileSettings /> },
+        {
+          id: "Translations",
+          label: "Translations",
+          content: <TranslationList />,
+        },
+      ]}
+    />
   );
 };

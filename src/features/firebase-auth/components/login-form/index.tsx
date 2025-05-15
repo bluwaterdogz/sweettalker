@@ -6,8 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import { RootStackNavigationProp } from "@/navigation/types";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "@/components/common/Button";
-import { TextInput } from "@/components/common/TextInput";
+import { Button, TextInput } from "@/components/common";
 import { useToast } from "@/lib/toast";
 
 interface LoginFormProps {}

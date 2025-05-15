@@ -1,21 +1,14 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Translation } from "./api/models";
 import { ModalityIdentifier } from "./enums";
-import { RootState } from "@/store";
-import {
-  translateText,
-  validateMessage,
-  startVoiceInput,
-  stopVoiceInput,
-} from "./thunks";
+import { translateText } from "./thunks";
 
 interface TranslationState {
   inputText: string;
   translations: Translation[];
   pastTranslations: Translation[];
   status: "idle" | "loading" | "succeeded" | "failed";
-  error: string | null;
-  isListening: boolean;
+  error: Error | null;
   selectedModalities: string[];
   conversationContext: string;
 }
@@ -26,7 +19,6 @@ const initialState: TranslationState = {
   pastTranslations: [],
   status: "idle",
   error: null,
-  isListening: false,
   selectedModalities: Object.values(ModalityIdentifier),
   conversationContext: "",
 };
@@ -65,11 +57,15 @@ const translationSlice = createSlice({
           ...state.pastTranslations,
           ...priorActiveTranslations,
         ];
-        state.translations = action.payload;
       })
       .addCase(translateText.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.payload as string;
+        state.error =
+          action.payload instanceof Error
+            ? action.payload
+            : action.payload
+            ? new Error(String(action.payload))
+            : null;
       });
   },
 });
@@ -82,5 +78,3 @@ export const {
   setConversationContext,
 } = translationSlice.actions;
 export default translationSlice.reducer;
-
-export { translateText, validateMessage, startVoiceInput, stopVoiceInput };

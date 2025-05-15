@@ -2,17 +2,14 @@ import React, { useCallback, useEffect, useMemo } from "react";
 import { View, StyleSheet, Switch, Text } from "react-native";
 import { useTheme } from "@/theme";
 import { useAppDispatch } from "@/store";
-import { logout as logoutLegacy } from "@/features/auth/reducers";
-import { logout as logoutFirebase } from "@/features/firebase-auth/reducers";
-import { Button } from "@/components/common/Button";
+import { logout } from "@/features/firebase-auth/reducers";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faMoon, faBell, faRobot } from "@fortawesome/free-solid-svg-icons";
-import { isFeatureEnabled } from "@/config/featureFlags";
-import { useServices } from "@/services/provider";
+import { useServices } from "@/services/context";
 import { Picker } from "@react-native-picker/picker";
-import { Model } from "@/features/translation/enums";
 import { mapToOption } from "@/lib/utils";
 import { Colors } from "@/theme/colors";
+import { Model } from "@/features/common-interpretation/api/enums";
 
 export const ProfileSettings = () => {
   const { colors, typography, isDarkMode, setDarkMode } = useTheme();
@@ -20,7 +17,6 @@ export const ProfileSettings = () => {
   const { profileService } = useServices();
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [selectedModel, setSelectedModel] = React.useState("gpt-4");
-  const useFirebaseAuth = isFeatureEnabled("USE_FIREBASE_AUTH");
 
   const modelOptions = useMemo(() => mapToOption(Model), []);
   const styles = getStyles(colors);
@@ -29,13 +25,11 @@ export const ProfileSettings = () => {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        if (useFirebaseAuth) {
-          const settings = await profileService.getUserSettings();
-          if (settings) {
-            setNotificationsEnabled(settings.notificationsEnabled);
-            if (settings.defaultModel) {
-              setSelectedModel(settings.defaultModel);
-            }
+        const settings = await profileService.getUserSettings();
+        if (settings) {
+          setNotificationsEnabled(settings.notificationsEnabled);
+          if (settings.defaultModel) {
+            setSelectedModel(settings.defaultModel);
           }
         }
       } catch (error) {
@@ -47,43 +41,37 @@ export const ProfileSettings = () => {
   }, []);
 
   const handleLogout = useCallback(async () => {
-    if (useFirebaseAuth) {
-      await dispatch(logoutFirebase());
-    } else {
-      await dispatch(logoutLegacy());
-    }
-  }, [useFirebaseAuth, dispatch]);
+    await dispatch(logout());
+  }, [dispatch]);
 
   const handleModelChange = useCallback(
     async (model: string) => {
       setSelectedModel(model);
-      if (useFirebaseAuth) {
-        try {
-          await profileService.createOrUpdateUserSettings({
-            defaultModel: model,
-          });
-        } catch (error) {
-          console.error("Error saving model preference:", error);
-        }
+
+      try {
+        await profileService.createOrUpdateUserSettings({
+          defaultModel: model,
+        });
+      } catch (error) {
+        console.error("Error saving model preference:", error);
       }
     },
-    [useFirebaseAuth, profileService]
+    [profileService]
   );
 
   const handleNotificationsChange = useCallback(
     async (enabled: boolean) => {
       setNotificationsEnabled(enabled);
-      if (useFirebaseAuth) {
-        try {
-          await profileService.createOrUpdateUserSettings({
-            notificationsEnabled: enabled,
-          });
-        } catch (error) {
-          console.error("Error saving notification preference:", error);
-        }
+
+      try {
+        await profileService.createOrUpdateUserSettings({
+          notificationsEnabled: enabled,
+        });
+      } catch (error) {
+        console.error("Error saving notification preference:", error);
       }
     },
-    [useFirebaseAuth, profileService]
+    [profileService]
   );
 
   return (
@@ -91,15 +79,12 @@ export const ProfileSettings = () => {
       style={[styles.container, { backgroundColor: colors.background.default }]}
     >
       <View style={styles.section}>
-        <Text style={[typography.headingSmall, { color: colors.text.primary }]}>
-          Appearance
-        </Text>
         <View style={styles.settingItem}>
           <View style={styles.settingContent}>
             <FontAwesomeIcon
               icon={faMoon}
               color={colors.primary.main}
-              size={20}
+              size={12}
               style={styles.icon}
             />
             <Text
@@ -120,9 +105,6 @@ export const ProfileSettings = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={[typography.headingSmall, { color: colors.text.primary }]}>
-          AI Model
-        </Text>
         <View style={styles.settingItem}>
           <View style={styles.settingContent}>
             <FontAwesomeIcon
@@ -171,9 +153,6 @@ export const ProfileSettings = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={[typography.headingSmall, { color: colors.text.primary }]}>
-          Notifications
-        </Text>
         <View style={styles.settingItem}>
           <View style={styles.settingContent}>
             <FontAwesomeIcon
@@ -198,14 +177,6 @@ export const ProfileSettings = () => {
           />
         </View>
       </View>
-
-      <Button
-        onPress={handleLogout}
-        style={[styles.logoutButton, { backgroundColor: colors.error.main }]}
-        textStyle={{ color: colors.text.light }}
-      >
-        Logout
-      </Button>
     </View>
   );
 };
@@ -213,8 +184,9 @@ export const ProfileSettings = () => {
 const getStyles = (colors: Colors) =>
   StyleSheet.create({
     container: {
-      flex: 1,
-      padding: 16,
+      // display: "flex",
+      // padding: 16,
+      overflow: "scroll",
     },
     section: {
       marginBottom: 24,
@@ -223,8 +195,7 @@ const getStyles = (colors: Colors) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingVertical: 12,
-      paddingHorizontal: 16,
+
       backgroundColor: "transparent",
       borderRadius: 8,
       marginTop: 8,
@@ -244,7 +215,8 @@ const getStyles = (colors: Colors) =>
       marginLeft: 16,
     },
     picker: {
-      height: 40,
+      // height: 40,
       minWidth: 120,
+      overflow: "hidden",
     },
   });
