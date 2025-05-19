@@ -1,7 +1,7 @@
-import { FirebaseLoginForm } from "@/features/firebase-auth/components/login-form";
-import { FirebaseRegisterForm } from "@/features/firebase-auth/components/register-form";
+import { FirebaseLoginForm } from "@/features/auth/components/login-form";
+import { FirebaseRegisterForm } from "@/features/auth/components/register-form";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-
+import { publicRoutes } from "./routes";
 const Stack = createNativeStackNavigator();
 
 export const AuthStack = () => {
@@ -12,16 +12,14 @@ export const AuthStack = () => {
         headerShown: true, // You can also customize globally here
       }}
     >
-      <Stack.Screen
-        name="Register"
-        component={FirebaseRegisterForm}
-        options={{ title: "Register" }}
-      />
-      <Stack.Screen
-        name="Login"
-        component={FirebaseLoginForm}
-        options={{ title: "Login" }}
-      />
+      {publicRoutes.map((route) => (
+        <Stack.Screen
+          key={route.name}
+          name={route.name}
+          component={route.component}
+          options={route.options}
+        />
+      ))}
     </Stack.Navigator>
   );
 };

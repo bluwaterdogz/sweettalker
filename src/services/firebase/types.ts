@@ -4,6 +4,7 @@ import { QueryConstraint, Timestamp } from "firebase/firestore";
 export interface UserData {
   displayName: string;
   email: string;
+  // TODO add settings to preferences
   preferences?: {
     theme?: string;
     notifications?: boolean;

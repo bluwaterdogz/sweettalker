@@ -1,15 +1,18 @@
 import { NavigationContainer } from "@react-navigation/native";
 import React from "react";
 import { AppNavigator } from "./AppNavigator";
-import { NavigationProvider } from "@/features/navigation/components/NavigationContext";
 import { SafeAreaView } from "react-native";
+import { NavigationProvider } from "@/shared/components/Navigation/NavigationContext";
+import { Host } from "react-native-portalize";
 
 export const MainNavigator = () => (
   <SafeAreaView style={{ flex: 1 }}>
-    <NavigationContainer>
-      <NavigationProvider>
-        <AppNavigator />
-      </NavigationProvider>
-    </NavigationContainer>
+    <Host>
+      <NavigationContainer>
+        <NavigationProvider>
+          <AppNavigator />
+        </NavigationProvider>
+      </NavigationContainer>
+    </Host>
   </SafeAreaView>
 );

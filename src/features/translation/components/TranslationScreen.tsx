@@ -1,47 +1,52 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, StyleSheet } from "react-native";
-import { TranslationDrawer } from "./TranslationDrawer";
-import { useTheme } from "@/theme";
+import { useTheme } from "@/common/theme/hooks/useTheme";
 import { TranslationList } from "./TranslationList";
-import { Colors } from "@/theme/colors";
 import { TranslationControls } from "./TranslationControls";
-import { ErrorBoundary } from "@/components/common/ErrorBoundary";
-
+import { ErrorBoundary } from "@/common/components/ErrorBoundary";
+import { Drawer, Tabs } from "@/common/components";
+import { TranslationFilters } from "./TranslationFilters";
 export const TranslationScreen = () => {
   const { colors } = useTheme();
-  const styles = getStyles(colors);
+
+  const tabs = useMemo(
+    () => [
+      {
+        id: "translations",
+        label: "Translations",
+        content: <TranslationFilters />,
+      },
+    ],
+    [colors]
+  );
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { backgroundColor: colors.background.primary }]}
+    >
+      <View style={styles.content}>
+        <ErrorBoundary>
+          <TranslationControls />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <TranslationList />
+        </ErrorBoundary>
+      </View>
       <ErrorBoundary>
-        <TranslationControls />
-        <TranslationList />
-        <TranslationDrawer />
+        <Drawer showHandle={true}>
+          <Tabs tabs={tabs} />
+        </Drawer>
       </ErrorBoundary>
     </View>
   );
 };
 
-const getStyles = (colors: Colors) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: 16,
-      backgroundColor: colors.background.default,
-    },
-
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.neutral[200],
-      backgroundColor: colors.background.default,
-    },
-    content: {
-      flex: 1,
-      padding: 12,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-  });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    display: "flex",
+    flex: 1,
+  },
+});

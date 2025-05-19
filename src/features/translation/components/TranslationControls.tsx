@@ -1,31 +1,38 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import { faLanguage } from "@fortawesome/free-solid-svg-icons";
-import { setInputText } from "../slice";
+import React, { useState } from "react";
+import { View } from "react-native";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { Button } from "@/components/common/Button";
-import { translateText } from "../thunks";
-import { TextInput } from "@/components/common/TextInput";
-import { useToast } from "@/lib/toast";
+import { translateText } from "../store/thunks";
+import { useToast } from "@/common/features/Toast";
 import { useCallback } from "react";
-import { VoiceToTextButton } from "@/lib/voice-to-text/components/VoiceToTextButton";
-import { ErrorMessage } from "@/components/common/ErrorMessage";
-import { useTheme } from "@/theme";
-import { common } from "@/theme/styles";
+import { common } from "@/common/styles";
+import { MultiSelect } from "@/common/components/MultiSelect";
+import { translationModalities, translationToneOptions } from "../consts";
+import { mockUserMessages } from "../mocks";
+import { useTranslation } from "react-i18next";
+import { InterpretationControls } from "@/features/common/components/InterpretationControls";
+import { useThemeBorders } from "@/features/common/hooks/useThemeBorders";
+import { Modality } from "../api/models";
+import { setModalities, setTone } from "../store/slice";
 
 interface TranslationControlsProps {}
 
-export const TranslationControls: React.FC<TranslationControlsProps> = () => {
-  const { inputText, status, error } = useAppSelector(
+export const TranslationControls: React.FC<TranslationControlsProps> = ({}) => {
+  const { status, modalities, tone } = useAppSelector(
     (state) => state.translation
   );
-
+  const [inputText, setInputText] = useState("");
   const { showToast } = useToast();
   const dispatch = useAppDispatch();
 
+  const { t } = useTranslation();
+
   const handleTranslate = useCallback(async () => {
     try {
-      await dispatch(translateText(inputText));
+      await dispatch(
+        translateText({
+          input: inputText,
+        })
+      );
     } catch (error) {
       showToast({
         type: "error",
@@ -34,48 +41,45 @@ export const TranslationControls: React.FC<TranslationControlsProps> = () => {
     }
   }, [dispatch, showToast, inputText]);
 
+  const mockInput = useCallback(() => {
+    setInputText(
+      mockUserMessages[Math.floor(Math.random() * mockUserMessages.length)]
+    );
+  }, [setInputText]);
+
+  const inputThemeStyles = useThemeBorders();
+
   return (
-    <View style={common.formContainer}>
-      <View style={styles.inputContainer}>
-        <TextInput
-          value={inputText}
-          onChangeText={(text) => dispatch(setInputText(text))}
-          placeholder="Enter text to translate"
-          multiline
-          style={{
-            minHeight: 100,
-            paddingRight: 40,
-          }}
-          textAlignVertical="top"
-          clearInput={() => dispatch(setInputText(""))}
-        />
-      </View>
-
+    <InterpretationControls
+      onInterpretation={handleTranslate}
+      loading={status === "loading"}
+      onMock={mockInput}
+      input={inputText}
+      setInput={setInputText}
+    >
       <View style={common.row}>
-        <VoiceToTextButton />
-
-        <Button
-          title="Translate"
-          onPress={handleTranslate}
-          icon={faLanguage}
-          variant="outline"
-          flex={1}
-          loading={status === "loading"}
+        <MultiSelect
+          style={inputThemeStyles}
+          dropdownStyle={inputThemeStyles}
+          options={translationToneOptions}
+          selectedValues={tone ? [tone] : []}
+          onSelectionChange={(itemValue) => dispatch(setTone(itemValue[0]))}
+          placeholder={t("common.selectTone")}
+          mode="single"
         />
       </View>
-      <ErrorMessage error={error} />
-    </View>
+      <View style={common.row}>
+        <MultiSelect<Modality>
+          options={Object.values(translationModalities).map((modality) => ({
+            label: modality.label,
+            value: modality,
+          }))}
+          dropdownStyle={inputThemeStyles}
+          style={inputThemeStyles}
+          selectedValues={modalities}
+          onSelectionChange={(itemValue) => dispatch(setModalities(itemValue))}
+        />
+      </View>
+    </InterpretationControls>
   );
 };
-
-const styles = StyleSheet.create({
-  inputContainer: {
-    position: "relative",
-  },
-  clearButton: {
-    position: "absolute",
-    right: 8,
-    top: 8,
-    zIndex: 1,
-  },
-});

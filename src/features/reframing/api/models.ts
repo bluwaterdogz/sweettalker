@@ -1,5 +1,5 @@
-import { ReframingModalityIdentifier } from "../enums";
-import { Interpretation } from "@/features/common-interpretation/api/models";
+import { ReframingModalityIdentifier, ReframingModalityLabel } from "../enums";
+import { Interpretation } from "@/features/common/api/models";
 
 export interface Reframing extends Interpretation {
   modality: ReframingModality;
@@ -15,6 +15,6 @@ export interface ReframingApi {
 
 export interface ReframingModality {
   id: ReframingModalityIdentifier;
-  label: string;
+  label: ReframingModalityLabel;
   description: string;
 }

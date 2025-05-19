@@ -7,16 +7,13 @@ import {
   updateProfile,
   User,
 } from "firebase/auth";
-import {
-  AuthClient,
-  SignInRequest,
-  SignUpRequest,
-  ResetPasswordRequest,
-} from "./types";
+import { SignInRequest, SignUpRequest, ResetPasswordRequest } from "./types";
 import { auth } from "@/firebase";
+import { mockUser } from "@/features/auth/api/mock";
+import { isMockAuthEnabled } from "@/features/auth/api/mock";
 
 // Auth client implementation
-export const authClient: AuthClient = {
+export class FirebaseAuthClient {
   async signIn(request: SignInRequest): Promise<User> {
     const userCredential = await signInWithEmailAndPassword(
       auth,
@@ -24,7 +21,7 @@ export const authClient: AuthClient = {
       request.password
     );
     return userCredential.user;
-  },
+  }
 
   async signUp(request: SignUpRequest): Promise<User> {
     const userCredential = await createUserWithEmailAndPassword(
@@ -36,20 +33,25 @@ export const authClient: AuthClient = {
       displayName: request.displayName,
     });
     return userCredential.user;
-  },
+  }
 
   async logout(): Promise<void> {
     await signOut(auth);
-  },
+  }
 
   async resetPassword(request: ResetPasswordRequest): Promise<void> {
     await sendPasswordResetEmail(auth, request.email);
-  },
+  }
 
   onAuthStateChange(callback: (user: User | null) => void) {
     return onAuthStateChanged(auth, callback);
-  },
-};
+  }
 
-// Export auth instance for direct access if needed
-export { auth };
+  getCurrentUser(): User | undefined {
+    if (isMockAuthEnabled()) {
+      return mockUser;
+    }
+    const user = auth.currentUser;
+    return user || undefined;
+  }
+}

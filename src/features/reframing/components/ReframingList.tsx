@@ -1,36 +1,32 @@
-import React, { useMemo, useState } from "react";
-import { View, StyleSheet } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
 import { Reframing } from "../api/models";
-import { UserMessage } from "@/features/common-interpretation/api/models";
+import { UserMessage } from "@/features/common/api/models";
 import { useSubscribeFirestore } from "@/services/firebase/hooks/useSubscribeFirestore";
 import { useServices } from "@/services/context";
 import { keyBy } from "lodash";
-import {
-  ListControls,
-  CardList,
-  Loader,
-  ErrorMessage,
-} from "@/components/common";
+import { InterpretationList } from "@/features/common/components/InterpretationList";
+import { useErrorLoadingUi } from "@/common/hooks/useErrorLoadingUi";
+import { InterpretationCard } from "@/features/common/components/InterpretationCard";
+import { deleteReframing } from "../store/thunks";
+import { useToast } from "@/common/features/Toast";
+import { useAppDispatch } from "@/store";
+import { updateReframing } from "../store/thunks";
 import { ReframingCard } from "./ReframingCard";
-import Fuse from "fuse.js";
-import { EmptyStateMessage } from "@/components/app";
-
-const fuseOptions = {
-  keys: ["text", "description", "title", "modality", "userMessage.text"],
-  threshold: 0.4,
-};
+interface PopulatedReframing extends Reframing {
+  userMessage: UserMessage;
+}
 
 export const ReframingList: React.FC = () => {
   const { reframingService } = useServices();
-  const [search, setSearch] = useState("");
-  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+  const { showToast } = useToast();
+  const dispatch = useAppDispatch();
 
   const {
-    result: reframings,
+    result: reframings = [],
     loading: loadingReframings,
     error: reframingsError,
   } = useSubscribeFirestore<Reframing[]>((...args) =>
-    reframingService.subscribeToReframings(...args)
+    reframingService.subscribe(...args)
   );
 
   const {
@@ -45,8 +41,8 @@ export const ReframingList: React.FC = () => {
     return keyBy(userMessages, "id");
   }, [userMessages]);
 
-  const formattedReframings = useMemo(() => {
-    return reframings?.map((reframing) => {
+  const populatedReframings: PopulatedReframing[] = useMemo(() => {
+    return (reframings || []).map((reframing) => {
       return {
         ...reframing,
         userMessage: userMessagesHashmap[reframing.userMessageId],
@@ -54,50 +50,51 @@ export const ReframingList: React.FC = () => {
     });
   }, [reframings, userMessagesHashmap]);
 
-  const filteredReframings = useMemo(() => {
-    let items = formattedReframings || [];
-    if (showOnlyFavorites) {
-      items = items.filter((t) => t.favorite);
-    }
-    if (search.trim()) {
-      const fuse = new Fuse(items, fuseOptions);
-      return fuse.search(search).map((r: any) => r.item);
-    }
-    return items;
-  }, [formattedReframings, search, showOnlyFavorites]);
+  const onUpdateReframing = useCallback(
+    async (id: string, data: Partial<Reframing>) => {
+      try {
+        await dispatch(
+          updateReframing({
+            id,
+            ...data,
+          })
+        );
+        showToast({ type: "success", message: "Reframing saved" });
+      } catch (error) {
+        showToast({ type: "error", message: "Failed to save reframing" });
+      }
+    },
+    [reframingService, showToast]
+  );
 
-  // if (reframingsError || userMessagesError) {
-  //   return <ErrorMessage error={reframingsError || userMessagesError} />;
-  // }
+  const onDeleteReframing = useCallback(async (id: string) => {
+    try {
+      await dispatch(deleteReframing(id));
+    } catch (error) {
+      showToast({ type: "error", message: "Failed to delete reframing" });
+    }
+  }, []);
 
   return (
-    <View style={[styles.container]}>
-      <ListControls
-        setSearch={setSearch}
-        search={search}
-        setShowOnlyFavorites={setShowOnlyFavorites}
-        showOnlyFavorites={showOnlyFavorites}
-      />
-      {loadingReframings || loadingUserMessages ? (
-        <Loader />
-      ) : (
-        <CardList
-          data={filteredReframings || []}
-          emptyListContent={<EmptyStateMessage />}
-          renderItem={(reframing) => (
-            <ReframingCard
-              reframing={reframing}
-              userMessage={reframing.userMessage}
-            />
-          )}
+    <InterpretationList<PopulatedReframing>
+      searchKeys={[
+        "text",
+        "description",
+        "notes",
+        "edits.text",
+        "title",
+        "userMessage.text",
+      ]}
+      items={populatedReframings}
+      renderItem={(item) => (
+        <ReframingCard
+          key={item.id}
+          onUpdate={onUpdateReframing}
+          onDelete={onDeleteReframing}
+          reframing={item}
+          userMessage={item.userMessage}
         />
       )}
-    </View>
+    />
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});

@@ -1,7 +1,5 @@
 import { User } from "firebase/auth";
-import { authClient } from "./client";
 import {
-  AuthService,
   SignInRequest,
   SignUpRequest,
   ResetPasswordRequest,
@@ -9,73 +7,73 @@ import {
   SignUpResponse,
   ResetPasswordResponse,
 } from "./types";
-import { AuthError } from "../errors";
+import { withErrorHandling } from "@/services/base/errors/utils/withErrorHandling";
+import { FirebaseAuthClient } from "./client";
+import { AuthError } from "@/services/base/errors/model/AuthError";
 
 // Auth service implementation
-export const authService: AuthService = {
+export class FirebaseAuthService {
+  constructor(private authClient: FirebaseAuthClient) {}
+
+  @withErrorHandling({
+    errorMessage: "Error signing in:",
+  })
   async signIn(request: SignInRequest): Promise<SignInResponse> {
-    try {
-      const user = await authClient.signIn(request);
-      return { user };
-    } catch (error) {
-      throw new AuthError({
-        code: (error as any).code,
-        message: "Failed to sign in: " + (error as Error).message,
-      });
-    }
-  },
+    const user = await this.authClient.signIn(request);
+    return { user };
+  }
 
+  @withErrorHandling({
+    errorMessage: "Error signing up:",
+  })
   async signUp(request: SignUpRequest): Promise<SignUpResponse> {
-    try {
-      const user = await authClient.signUp(request);
-      // Initialize user data in database
-      // await create({
-      //   collectionName: COLLECTIONS.USERS,
-      //   data: {
-      //     displayName: request.displayName,
-      //     email: request.email,
-      //     preferences: DEFAULT_USER_PREFERENCES,
-      //   },
-      //   id: user.uid,
-      // });
-      return { user };
-    } catch (error) {
-      throw new AuthError({
-        code: (error as any).code,
-        message: "Failed to sign up: " + (error as Error).message,
-      });
-    }
-  },
+    const user = await this.authClient.signUp(request);
+    // Initialize user data in database
+    // await create({
+    //   collectionName: COLLECTIONS.USERS,
+    //   data: {
+    //     displayName: request.displayName,
+    //     email: request.email,
+    //     preferences: DEFAULT_USER_PREFERENCES,
+    //   },
+    //   id: user.uid,
+    // });
+    return { user };
+  }
 
+  @withErrorHandling({
+    errorMessage: "Error logging out:",
+  })
   async logout(): Promise<void> {
-    try {
-      await authClient.logout();
-    } catch (error) {
-      throw new AuthError({
-        code: (error as any).code,
-        message: "Failed to logout: " + (error as Error).message,
-      });
-    }
-  },
+    await this.authClient.logout();
+  }
 
+  @withErrorHandling({
+    errorMessage: "Error resetting password:",
+  })
   async resetPassword(
     request: ResetPasswordRequest
   ): Promise<ResetPasswordResponse> {
-    try {
-      await authClient.resetPassword(request);
-      return { success: true };
-    } catch (error) {
-      throw new AuthError({
-        code: (error as any).code,
-        message: "Failed to reset password: " + (error as Error).message,
-      });
-    }
-  },
+    await this.authClient.resetPassword(request);
+    return { success: true };
+  }
 
   onAuthStateChange(callback: (user: User | null) => void) {
-    return authClient.onAuthStateChange(callback);
-  },
-};
+    return this.authClient.onAuthStateChange(callback);
+  }
 
-// Export auth instance for direct access if needed
-export { auth } from "./client";
+  @withErrorHandling({
+    errorMessage: "User Not Logged in or not found",
+  })
+  getCurrentUser(): User {
+    const user = this.getCurrentUserIfExists();
+    if (!user) {
+      throw new AuthError("User not found");
+    }
+    return user;
+  }
+
+  getCurrentUserIfExists(): User | undefined {
+    return this.authClient.getCurrentUser();
+  }
+}

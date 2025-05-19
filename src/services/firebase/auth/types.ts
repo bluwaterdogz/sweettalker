@@ -1,5 +1,4 @@
-import { User, UserCredential } from "firebase/auth";
-import { AuthError } from "../errors";
+import { User } from "firebase/auth";
 
 // Request types
 export interface SignInRequest {
@@ -26,22 +25,4 @@ export interface SignUpResponse {
 
 export interface ResetPasswordResponse {
   success: boolean;
-}
-
-// Client interface
-export interface AuthClient {
-  signIn(request: SignInRequest): Promise<User>;
-  signUp(request: SignUpRequest): Promise<User>;
-  logout(): Promise<void>;
-  resetPassword(request: ResetPasswordRequest): Promise<void>;
-  onAuthStateChange(callback: (user: User | null) => void): () => void;
-}
-
-// Service interface
-export interface AuthService {
-  signIn(request: SignInRequest): Promise<SignInResponse>;
-  signUp(request: SignUpRequest): Promise<SignUpResponse>;
-  logout(): Promise<void>;
-  resetPassword(request: ResetPasswordRequest): Promise<ResetPasswordResponse>;
-  onAuthStateChange(callback: (user: User | null) => void): () => void;
 }

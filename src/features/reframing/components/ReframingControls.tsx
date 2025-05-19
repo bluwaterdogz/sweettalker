@@ -1,53 +1,59 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import { TextInput } from "@/components/common/TextInput";
-import { Button } from "@/components/common/Button";
-import { useTheme } from "@/theme";
-import { reframeText } from "../thunks";
+import React, { useCallback, useState } from "react";
+import { reframeText } from "../store/thunks";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { clearInputText, setInputText } from "../slice";
-import { common } from "@/theme/styles";
+import { mockReframing } from "../api/mocks";
+import { InterpretationControls } from "@/features/common/components/InterpretationControls";
+import { setModality } from "../store/slice";
+import { View, Text } from "react-native";
+import { ReframingModality } from "../api/models";
+import { MultiSelect } from "@/common/components/MultiSelect";
+import { common } from "@/common/styles";
+import { reframingModalities } from "../consts";
+import { useThemeBorders } from "@/features/common/hooks/useThemeBorders";
 
 export const ReframingControls: React.FC = () => {
-  const { inputText, status } = useAppSelector((state) => state.reframing);
+  const { status, modality } = useAppSelector((state) => state.reframing);
+  const [inputText, setInputText] = useState("");
+
   const dispatch = useAppDispatch();
 
-  const handleReframe = () => {
+  const handleReframe = useCallback(() => {
     if (inputText.trim()) {
-      dispatch(reframeText(inputText));
-      dispatch(clearInputText());
+      dispatch(reframeText({ input: inputText, options: { modality } }));
     }
-  };
+  }, [dispatch, inputText]);
+
+  const handleMock = useCallback(
+    () =>
+      setInputText(
+        mockReframing[Math.floor(Math.random() * mockReframing.length)]
+      ),
+    [dispatch]
+  );
+
+  const inputStyles = useThemeBorders();
 
   return (
-    <View style={[common.formContainer]}>
-      <TextInput
-        value={inputText}
-        onChangeText={(text) => dispatch(setInputText(text))}
-        placeholder="Enter text to reframe..."
-        multiline={true}
-        style={styles.input}
-        textAlignVertical="top"
-        clearInput={() => dispatch(clearInputText())}
-      />
+    <InterpretationControls
+      onInterpretation={handleReframe}
+      // loading={status === "loading"}
+      onMock={handleMock}
+      input={inputText}
+      setInput={setInputText}
+    >
       <View style={common.row}>
-        <Button
-          title="Reframe"
-          onPress={handleReframe}
-          disabled={!inputText.trim()}
-          flex={1}
-          loading={status === "loading"}
+        <MultiSelect<ReframingModality>
+          options={Object.values(reframingModalities).map((modality) => ({
+            label: modality.label,
+            value: modality,
+          }))}
+          dropdownStyle={inputStyles}
+          style={inputStyles}
+          mode="single"
+          selectedValues={[modality]}
+          onSelectionChange={(itemValue) => dispatch(setModality(itemValue[0]))}
         />
       </View>
-    </View>
+    </InterpretationControls>
   );
 };
-
-const styles = StyleSheet.create({
-  input: {
-    minHeight: 100,
-  },
-  button: {
-    alignSelf: "flex-end",
-  },
-});

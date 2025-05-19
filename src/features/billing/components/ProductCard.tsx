@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
-import { useTheme } from "@/theme";
-import { useBilling } from "../context/BillingContext";
+import { useTheme } from "@/common/theme/hooks/useTheme";
+import { useBilling } from "../context";
 import { BillingProduct } from "../api/models";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faCoins, faInfinity } from "@fortawesome/free-solid-svg-icons";
@@ -23,8 +23,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       style={[
         styles.card,
         {
-          backgroundColor: colors.background.paper,
-          borderColor: colors.primary.main,
+          backgroundColor: colors.background.secondary,
+          borderColor: colors.accent.primary,
         },
       ]}
       onPress={handlePurchase}
@@ -33,7 +33,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <FontAwesomeIcon
           icon={product.type === "credits" ? faCoins : faInfinity}
           size={24}
-          color={colors.primary.main}
+          color={colors.accent.primary}
         />
         <Text style={[typography.headingSmall, { color: colors.text.primary }]}>
           {product.title}
@@ -48,13 +48,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </Text>
 
       {product.type === "credits" && product.credits && (
-        <Text style={[typography.bodyLarge, { color: colors.primary.main }]}>
+        <Text style={[typography.bodyLarge, { color: colors.text.primary }]}>
           {product.credits} Credits
         </Text>
       )}
 
       {product.type === "subscription" && product.duration && (
-        <Text style={[typography.bodyLarge, { color: colors.primary.main }]}>
+        <Text style={[typography.bodyLarge, { color: colors.text.primary }]}>
           {product.duration} Days
         </Text>
       )}

@@ -6,26 +6,24 @@ import {
   ActivityIndicator,
   Text,
 } from "react-native";
-import { useTheme } from "@/theme";
-import { useBilling } from "../context/BillingContext";
+import { useTheme } from "@/common/theme/hooks/useTheme";
+import { useBilling } from "../context";
 import { BillingProduct } from "../api/models";
 import { ProductCard } from "./ProductCard";
-import { Colors } from "@/theme/colors";
 
 export const BillingScreen = () => {
   const { colors, typography } = useTheme();
   const { products, credits, isLoading, error } = useBilling();
-  const styles = getStyles(colors);
 
   if (isLoading) {
     return (
       <View
         style={[
           styles.container,
-          { backgroundColor: colors.background.default },
+          { backgroundColor: colors.background.primary },
         ]}
       >
-        <ActivityIndicator size="large" color={colors.primary.main} />
+        <ActivityIndicator size="large" color={colors.accent.primary} />
       </View>
     );
   }
@@ -35,10 +33,10 @@ export const BillingScreen = () => {
       <View
         style={[
           styles.container,
-          { backgroundColor: colors.background.default },
+          { backgroundColor: colors.background.primary },
         ]}
       >
-        <Text style={[typography.bodyLarge, { color: colors.error.main }]}>
+        <Text style={[typography.bodyLarge, { color: colors.error.primary }]}>
           {error}
         </Text>
       </View>
@@ -52,9 +50,17 @@ export const BillingScreen = () => {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.background.default }]}
+      style={[styles.container, { backgroundColor: colors.background.primary }]}
     >
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          {
+            borderBottomColor: colors.neutral[200],
+            backgroundColor: colors.background.primary,
+          },
+        ]}
+      >
         <Text style={[typography.headingLarge, { color: colors.text.primary }]}>
           Billing
         </Text>
@@ -63,7 +69,9 @@ export const BillingScreen = () => {
         </Text>
       </View>
 
-      <View style={styles.section}>
+      <View
+        style={[styles.section, { backgroundColor: colors.background.primary }]}
+      >
         <Text
           style={[typography.headingMedium, { color: colors.text.primary }]}
         >
@@ -76,7 +84,9 @@ export const BillingScreen = () => {
         </View>
       </View>
 
-      <View style={styles.section}>
+      <View
+        style={[styles.section, { backgroundColor: colors.background.primary }]}
+      >
         <Text
           style={[typography.headingMedium, { color: colors.text.primary }]}
         >
@@ -92,24 +102,19 @@ export const BillingScreen = () => {
   );
 };
 
-const getStyles = (colors: Colors) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background.default,
-    },
-    header: {
-      padding: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.neutral[200],
-      backgroundColor: colors.background.default,
-    },
-    section: {
-      padding: 16,
-      backgroundColor: colors.background.default,
-    },
-    productsGrid: {
-      marginTop: 16,
-      gap: 16,
-    },
-  });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    padding: 16,
+    borderBottomWidth: 1,
+  },
+  section: {
+    padding: 16,
+  },
+  productsGrid: {
+    marginTop: 16,
+    gap: 16,
+  },
+});

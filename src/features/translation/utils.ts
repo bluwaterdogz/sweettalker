@@ -1,31 +1,25 @@
+import { Modality } from "./api/models";
 import { translationModalities } from "./consts";
 import { RelationalContext } from "./enums";
 import { generatePromptGPT3_5 } from "./prompts";
 import { generatePromptGPT4 } from "./prompts";
-import { Model } from "@/features/common-interpretation/api/enums";
-
-// todo, check this package
-// import { encoding_for_model } from "@dqbd/tiktoken";
-
-// export function estimateTokens(
-//   text: string,
-//   model: "gpt-3.5-turbo" | "gpt-4" = "gpt-3.5-turbo"
-// ): number {
-//   const enc = encoding_for_model(model);
-//   const tokens = enc.encode(text);
-//   return tokens.length;
-// }
+import { Model } from "@/features/common/api/enums";
 
 export function estimateTokensRough(text: string): number {
   return Math.ceil(text.length / 4); // very rough approximation
 }
 
-type PromptOptions = {
-  userMessage: string;
-  modalities?: string[];
-  context?: RelationalContext;
+interface PromptArgs {
+  input: string;
   model: Model;
-};
+  options: PromptOptions;
+}
+
+export interface PromptOptions {
+  modalities?: Modality[];
+  context?: RelationalContext;
+  tone?: string;
+}
 
 export const generatePromptFunctionMap: Record<
   Model,
@@ -36,24 +30,25 @@ export const generatePromptFunctionMap: Record<
 };
 
 export function generateRelationalPrompt({
-  userMessage,
-  modalities = Object.values(translationModalities).map((m) => m.id),
-  context,
+  input,
+  options,
   model = Model.Gpt3_5,
-}: PromptOptions): string {
-  const selected = Object.values(translationModalities).filter((m) =>
-    modalities.includes(m.id)
-  );
-  const identifiers = selected.map((m) => `- ${m.id}`).join("\n");
+}: PromptArgs): string {
+  const {
+    modalities = Object.values(translationModalities),
+    context,
+    tone = "gentle",
+  } = options;
 
   const contextLine = context
     ? `This is in the context of a ${context} relationship.`
     : "";
 
   const prompt = generatePromptFunctionMap[model](
-    identifiers,
+    modalities,
     contextLine,
-    userMessage
+    input,
+    tone
   ).trim();
 
   return prompt;

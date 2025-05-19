@@ -5,10 +5,8 @@ export const baseModelMapper = (data: any): BaseModel => {
   return {
     id: data.id,
     createdAt: data.createdAt,
-    createdAtDateString: toDatestring(data.createdAt),
     createdBy: data.createdBy,
     updatedAt: data.updatedAt,
-    updatedAtDateString: toDatestring(data.updatedAt),
     updatedBy: data.updatedBy,
   };
 };

@@ -3,7 +3,7 @@ export enum FirestoreCollections {
   USER_MESSAGES = "user_messages",
   TRANSLATION_VERSIONS = "translation_versions",
   USER_PROFILES = "user_profiles",
-  USER_SETTINGS = "user_settings",
+  SETTINGS = "user_settings",
   TRANSLATION_CREDITS = "translation_credits",
   SUBSCRIPTIONS = "subscriptions",
   REFRAMINGS = "reframings",

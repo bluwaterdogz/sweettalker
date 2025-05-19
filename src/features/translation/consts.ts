@@ -32,4 +32,32 @@ export const translationModalities: Record<ModalityIdentifier, Modality> = {
     label: ModalityLabel.RadicalHonesty,
     originator: "Brad Blanton",
   },
+  [ModalityIdentifier.EmotionallyFocusedCommunication]: {
+    id: ModalityIdentifier.EmotionallyFocusedCommunication,
+    label: ModalityLabel.EmotionallyFocusedCommunication,
+    originator: "Dr. Sue Johnson",
+  },
 };
+
+export const translationToneOptions = [
+  {
+    value: "romantic",
+    label: "Romantic",
+  },
+  {
+    value: "gentle",
+    label: "Gentle",
+  },
+  {
+    value: "direct",
+    label: "Direct",
+  },
+  {
+    value: "playful",
+    label: "Playful",
+  },
+  {
+    value: "professional",
+    label: "Professional",
+  },
+];

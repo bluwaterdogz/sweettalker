@@ -1,13 +1,15 @@
-import { Interpretation } from "@/features/common-interpretation/api/models";
+import { Interpretation } from "@/features/common/api/models";
 import {
   ModalityIdentifier,
   ModalityLabel,
 } from "@/features/translation/enums";
+import { Timestamp } from "firebase/firestore";
 
 // View Models
+// TODO: persist this like any other entity?
 export interface Edit {
   text: string;
-  createdAt: Date;
+  createdAt: Timestamp;
   id: string;
 }
 

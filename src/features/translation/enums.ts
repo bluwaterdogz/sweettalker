@@ -12,6 +12,7 @@ export enum ModalityLabel {
   AuthenticRelating = "Authentic Relating",
   CompassionateInquiry = "Compassionate Inquiry",
   RadicalHonesty = "Radical Honesty",
+  EmotionallyFocusedCommunication = "Emotionally Focused Communication",
 }
 
 export enum ModalityIdentifier {
@@ -21,4 +22,5 @@ export enum ModalityIdentifier {
   AuthenticRelating = "Authentic Relating (AR)",
   CompassionateInquiry = "Compassionate Inquiry (CI)",
   RadicalHonesty = "Radical Honesty (RH)",
+  EmotionallyFocusedCommunication = "Emotionally Focused Communication (EFC)",
 }

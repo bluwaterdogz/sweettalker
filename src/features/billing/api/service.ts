@@ -1,4 +1,3 @@
-import { FirebaseService } from "@/services/firebase/service";
 import { FirestoreCollections } from "@/services/firebase/collections";
 // import * as InAppPurchases from "expo-in-app-purchases";
 
@@ -9,6 +8,7 @@ import {
   TranslationCredit,
   TranslationCreditApi,
 } from "./models";
+import { withErrorHandling } from "@/services/base/errors/utils/withErrorHandling";
 
 // TODO: eject from expo and use native module
 const InAppPurchases: any = {
@@ -30,81 +30,74 @@ export class BillingService {
     }
   }
 
+  @withErrorHandling({
+    errorMessage: "Error loading products:",
+  })
   async loadProducts(): Promise<BillingProduct[]> {
-    try {
-      const productIds = DEFAULT_PRODUCTS.map((p) => p.productId);
-      const { responseCode, results } = await InAppPurchases.getProductsAsync(
-        productIds
-      );
+    const productIds = DEFAULT_PRODUCTS.map((p) => p.productId);
+    const { responseCode, results } = await InAppPurchases.getProductsAsync(
+      productIds
+    );
 
-      if (responseCode === InAppPurchases.IAPResponseCode.OK) {
-        // Update prices from store
-        return DEFAULT_PRODUCTS.map((product) => {
-          const storeProduct = results.find(
-            (p: any) => p.productId === product.productId
-          );
-          if (storeProduct) {
-            return {
-              ...product,
-              price: storeProduct.priceString,
-            };
-          }
-          return product;
-        });
-      }
-
-      return DEFAULT_PRODUCTS;
-    } catch (error) {
-      console.error("Error loading products:", error);
-      return DEFAULT_PRODUCTS;
+    if (responseCode === InAppPurchases.IAPResponseCode.OK) {
+      // Update prices from store
+      return DEFAULT_PRODUCTS.map((product) => {
+        const storeProduct = results.find(
+          (p: any) => p.productId === product.productId
+        );
+        if (storeProduct) {
+          return {
+            ...product,
+            price: storeProduct.priceString,
+          };
+        }
+        return product;
+      });
     }
+
+    return DEFAULT_PRODUCTS;
   }
 
+  @withErrorHandling({
+    errorMessage: "Error purchasing product:",
+  })
   async purchaseProduct(productId: string): Promise<PurchaseResult> {
-    try {
-      const { responseCode, results } = await InAppPurchases.purchaseItemAsync(
-        productId
-      );
+    const { responseCode, results } = await InAppPurchases.purchaseItemAsync(
+      productId
+    );
 
-      if (responseCode === InAppPurchases.IAPResponseCode.OK) {
-        const purchase = results[0];
-        const product = DEFAULT_PRODUCTS.find((p) => p.productId === productId);
+    if (responseCode === InAppPurchases.IAPResponseCode.OK) {
+      const purchase = results[0];
+      const product = DEFAULT_PRODUCTS.find((p) => p.productId === productId);
 
-        if (!product) {
-          throw new Error("Product not found");
-        }
+      if (!product) {
+        throw new Error("Product not found");
+      }
 
-        // Handle the purchase based on product type
-        if (product.type === "credits" && product.credits) {
-          await this.addCredits(product.credits);
-          return {
-            success: true,
-            credits: product.credits,
-          };
-        } else if (product.type === "subscription") {
-          // Handle subscription
-          await this.activateSubscription(product.duration || 30);
-          return {
-            success: true,
-          };
-        }
-
+      // Handle the purchase based on product type
+      if (product.type === "credits" && product.credits) {
+        await this.addCredits(product.credits);
+        return {
+          success: true,
+          credits: product.credits,
+        };
+      } else if (product.type === "subscription") {
+        // Handle subscription
+        await this.activateSubscription(product.duration || 30);
         return {
           success: true,
         };
       }
 
       return {
-        success: false,
-        error: "Purchase failed",
-      };
-    } catch (error) {
-      console.error("Error purchasing product:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
+        success: true,
       };
     }
+
+    return {
+      success: false,
+      error: "Purchase failed",
+    };
   }
 
   // async getCredits(): Promise<number> {

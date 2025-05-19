@@ -1,4 +1,4 @@
-import { interpretationMapper } from "@/features/common-interpretation/api/mappers";
+import { interpretationMapper } from "@/features/common/api/mappers";
 import { reframingModalities } from "../consts";
 import { ReframingModalityIdentifier } from "../enums";
 import { Reframing } from "./models";
