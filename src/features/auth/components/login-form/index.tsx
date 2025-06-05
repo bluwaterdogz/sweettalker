@@ -3,12 +3,13 @@ import { useCallback, useState } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { login } from "../../store/thunks";
 import { useNavigation } from "@react-navigation/native";
-import { RootStackNavigationProp } from "@/navigation/types";
+import { RootStackNavigationProp } from "@/app/navigation/types";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, TextInput } from "@/common/components";
-import { useToast } from "@/common/features/Toast";
-import { useTranslation } from "react-i18next";
+import { useToast } from "@/common/components/Toast";
+import { useTranslation } from "@/i18n/hooks/useTranslation";
+import { useAppNavigation } from "@/app/navigation/hooks/useAppNavigation";
 
 interface LoginFormProps {}
 
@@ -18,7 +19,7 @@ export const FirebaseLoginForm = (props: LoginFormProps) => {
   const { error, loading } = useAppSelector((state) => state.firebaseAuth);
 
   const dispatch = useAppDispatch();
-  const navigation = useNavigation<RootStackNavigationProp>();
+  const navigation = useAppNavigation();
   const { showToast } = useToast();
   const { t } = useTranslation();
 

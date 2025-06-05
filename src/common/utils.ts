@@ -1,15 +1,5 @@
 import { format } from "date-fns";
-import { isEqual } from "lodash";
 import { Timestamp } from "firebase/firestore";
-
-export function mapToOption<V = string>(
-  enumType: Record<string, V>
-): { value: V; label: string }[] {
-  return Object.entries(enumType).map(([key, value]) => ({
-    label: key,
-    value: value,
-  }));
-}
 
 export function formatDate(
   date: Date,

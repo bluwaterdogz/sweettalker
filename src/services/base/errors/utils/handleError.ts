@@ -1,4 +1,4 @@
-import { useToast } from "@/common/features/Toast";
+import { useToast } from "@/common/components/Toast";
 import { ApplicationError } from "../model/ApplicationError";
 import { ApiError } from "../model/ApiError";
 import { NetworkError } from "../model/NetworkError";

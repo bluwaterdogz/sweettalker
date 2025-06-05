@@ -1,42 +1,53 @@
-import { ModalityLabel, ModalityIdentifier } from "./enums";
-import { Modality } from "./api/models";
+import {
+  ModalityLabel,
+  ModalityIdentifier,
+} from "@common/models/translation/translation-modality";
+import { Modality } from "@common/models/translation/translation-modality";
 
 export const translationModalities: Record<ModalityIdentifier, Modality> = {
-  [ModalityIdentifier.NonviolentCommunication]: {
-    id: ModalityIdentifier.NonviolentCommunication,
-    label: ModalityLabel.NonviolentCommunication,
-    originator: "Marshall Rosenberg",
-  },
-  [ModalityIdentifier.ImagoRelationshipTherapy]: {
-    id: ModalityIdentifier.ImagoRelationshipTherapy,
-    label: ModalityLabel.ImagoRelationshipTherapy,
-    originator: "Harville Hendrix & Helen LaKelly Hunt",
-  },
   [ModalityIdentifier.Circling]: {
     id: ModalityIdentifier.Circling,
     label: ModalityLabel.Circling,
-    originator: "Guy Sengstock and others",
   },
-  [ModalityIdentifier.AuthenticRelating]: {
-    id: ModalityIdentifier.AuthenticRelating,
-    label: ModalityLabel.AuthenticRelating,
-    originator: "AR community practices",
-  },
-  [ModalityIdentifier.CompassionateInquiry]: {
-    id: ModalityIdentifier.CompassionateInquiry,
-    label: ModalityLabel.CompassionateInquiry,
-    originator: "Dr. Gabor Maté",
-  },
-  [ModalityIdentifier.RadicalHonesty]: {
-    id: ModalityIdentifier.RadicalHonesty,
-    label: ModalityLabel.RadicalHonesty,
-    originator: "Brad Blanton",
-  },
+
   [ModalityIdentifier.EmotionallyFocusedCommunication]: {
     id: ModalityIdentifier.EmotionallyFocusedCommunication,
     label: ModalityLabel.EmotionallyFocusedCommunication,
-    originator: "Dr. Sue Johnson",
   },
+
+  [ModalityIdentifier.AuthenticRelating]: {
+    id: ModalityIdentifier.AuthenticRelating,
+    label: ModalityLabel.AuthenticRelating,
+  },
+
+  [ModalityIdentifier.RelationalMindfulness]: {
+    id: ModalityIdentifier.RelationalMindfulness,
+    label: ModalityLabel.RelationalMindfulness,
+  },
+
+  [ModalityIdentifier.EmpathicDialogue]: {
+    id: ModalityIdentifier.EmpathicDialogue,
+    label: ModalityLabel.EmpathicDialogue,
+  },
+
+  // [ModalityIdentifier.NonviolentCommunication]: {
+  //   id: ModalityIdentifier.NonviolentCommunication,
+  //   label: ModalityLabel.NonviolentCommunication,
+  // },
+
+  // [ModalityIdentifier.RadicalHonesty]: {
+  //   id: ModalityIdentifier.RadicalHonesty,
+  //   label: ModalityLabel.RadicalHonesty,
+  // },
+  // [ModalityIdentifier.ImagoRelationshipTherapy]: {
+  //   id: ModalityIdentifier.ImagoRelationshipTherapy,
+  //   label: ModalityLabel.ImagoRelationshipTherapy,
+  // },
+
+  // [ModalityIdentifier.CompassionateInquiry]: {
+  //   id: ModalityIdentifier.CompassionateInquiry,
+  //   label: ModalityLabel.CompassionateInquiry,
+  // },
 };
 
 export const translationToneOptions = [

@@ -35,7 +35,7 @@ export const firebaseAuthSlice = createSlice({
         state.error = undefined;
       })
       .addCase(login.fulfilled, (state, action) => {
-        state.user = action.payload;
+        state.user = action.payload.user;
         state.loading = false;
         state.error = undefined;
       })
@@ -56,8 +56,16 @@ export const firebaseAuthSlice = createSlice({
         state.loading = false;
         state.error = action.error.message;
       })
+      .addCase(logout.pending, (state) => {
+        state.loading = true;
+        state.error = undefined;
+      })
       .addCase(logout.fulfilled, (state) => {
         return initialState;
+      })
+      .addCase(logout.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
       });
   },
 });

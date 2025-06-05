@@ -9,24 +9,24 @@ import {
   faLanguage,
 } from "@fortawesome/free-solid-svg-icons";
 import { useServices } from "@/services/context";
-import { mapToOption } from "@/common/utils";
-import { Model } from "@/features/common/api/enums";
+import { Model } from "@common/types/model";
 import { MultiSelect } from "@/common/components/MultiSelect";
-import { ThemeLabel } from "@/common/theme/types";
 import SettingField from "./SettingField";
-import { Settings } from "../api";
+import { Settings } from "@common/models/profile/settings";
+import { mapToOption } from "@common/utils/options";
 import { updateSettings } from "../store/thunks";
-import { useI18n } from "@/i18n/context";
-import { Loader } from "@/common/components";
-import { useTranslation } from "react-i18next";
-import { Button } from "@/common/components/Button";
-import { checkStoreState } from "../store/slice";
+import { setSettings } from "../store/slice";
+import { ContentDropdown, Loader } from "@/common/components";
+import { useTranslation } from "@/i18n/hooks/useTranslation";
+import { ThemeLabel } from "@/common/theme/types";
+import { requestNotificationPermissions } from "@/permissions/notifications/requestNotificationPermissions";
+
 export const ProfileSettings = () => {
   const { profileService } = useServices();
   const { colors, theme, setTheme } = useTheme();
   const dispatch = useAppDispatch();
   const modelOptions = useMemo(() => mapToOption(Model), []);
-  const { language, languages, setLanguage } = useI18n();
+  const { language, languages, setLanguage } = useTranslation();
   const { loading, model, notifications } = useAppSelector(
     (state) => state.settings
   );
@@ -44,11 +44,7 @@ export const ProfileSettings = () => {
   const handleSettingsChange = useCallback(
     async (newSettings: Partial<Settings>) => {
       try {
-        dispatch(
-          updateSettings({
-            settings: newSettings,
-          })
-        );
+        dispatch(updateSettings(newSettings));
       } catch (error) {
         console.error("Error saving settings:", error);
       }
@@ -59,6 +55,7 @@ export const ProfileSettings = () => {
   const handleModelChange = useCallback(
     async (model: Model[]) => {
       const selectedModel = model[0];
+      dispatch(setSettings({ model: selectedModel }));
       await handleSettingsChange({ model: selectedModel });
     },
     [handleSettingsChange]
@@ -66,7 +63,17 @@ export const ProfileSettings = () => {
 
   const handleNotificationsChange = useCallback(
     async (notifications: boolean) => {
-      await handleSettingsChange({ notifications });
+      if (!notifications) {
+        await requestNotificationPermissions({
+          onReject: () => {
+            dispatch(setSettings({ notifications: false }));
+          },
+          onSuccess: async () => {
+            dispatch(setSettings({ notifications }));
+            await handleSettingsChange({ notifications });
+          },
+        });
+      }
     },
     [handleSettingsChange]
   );
@@ -110,24 +117,10 @@ export const ProfileSettings = () => {
             value={theme === ThemeLabel.dark}
             onValueChange={handleThemeChange}
             trackColor={trackColors}
+            thumbColor={colors.background.primary}
           />
         }
       />
-
-      <SettingField
-        icon={faRobot}
-        title={t("common.model")}
-        children={
-          <MultiSelect
-            disabled={loading}
-            options={modelOptions}
-            selectedValues={model ? [model] : []}
-            onSelectionChange={handleModelChange}
-            mode="single"
-          />
-        }
-      />
-
       <SettingField
         icon={faLanguage}
         title={t("common.language")}
@@ -137,9 +130,7 @@ export const ProfileSettings = () => {
             options={languageOptions}
             selectedValues={language ? [language] : []}
             onSelectionChange={([selected]) => {
-              if (selected) {
-                handleLanguageChange(selected);
-              }
+              handleLanguageChange(selected);
             }}
             mode="single"
             placeholder={t("common.selectLanguage")}
@@ -155,6 +146,7 @@ export const ProfileSettings = () => {
             value={notifications}
             onValueChange={handleNotificationsChange}
             trackColor={trackColors}
+            thumbColor={colors.background.primary}
           />
         }
       />
@@ -162,6 +154,21 @@ export const ProfileSettings = () => {
         title="Check Store State"
         onPress={() => dispatch(checkStoreState())}
       /> */}
+      <ContentDropdown label="Advanced" topControl>
+        <SettingField
+          icon={faRobot}
+          title={t("common.model")}
+          children={
+            <MultiSelect
+              disabled={loading}
+              options={modelOptions}
+              selectedValues={model ? [model] : []}
+              onSelectionChange={handleModelChange}
+              mode="single"
+            />
+          }
+        />
+      </ContentDropdown>
       {loading && <Loader />}
     </View>
   );

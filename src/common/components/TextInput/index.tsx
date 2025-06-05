@@ -87,7 +87,7 @@ export const TextInput: React.FC<TextInputProps> = ({
           >
             <FontAwesomeIcon
               icon={leftIcon}
-              size={20}
+              size={15}
               color={colors.text.secondary}
             />
           </TouchableOpacity>
@@ -125,7 +125,7 @@ export const TextInput: React.FC<TextInputProps> = ({
             <FontAwesomeIcon
               icon={faTimes}
               size={20}
-              color={colors.accent.secondary}
+              color={colors.text.primary}
             />
           </TouchableOpacity>
         )}
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   iconContainer: {
-    paddingTop: 8,
+    paddingTop: 11,
     display: "flex",
   },
   disabledInput: {

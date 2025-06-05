@@ -39,3 +39,5 @@ yarn-error.*
 
 /src/features/translation/prompts.ts
 **/prompts.ts
+
+ideas**

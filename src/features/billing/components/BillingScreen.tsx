@@ -7,8 +7,8 @@ import {
   Text,
 } from "react-native";
 import { useTheme } from "@/common/theme/hooks/useTheme";
-import { useBilling } from "../context";
-import { BillingProduct } from "../api/models";
+import { useBilling } from "../context/context";
+import { BillingProduct } from "@sweettalker/common/src/models";
 import { ProductCard } from "./ProductCard";
 
 export const BillingScreen = () => {

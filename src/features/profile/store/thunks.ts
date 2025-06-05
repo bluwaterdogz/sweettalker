@@ -1,24 +1,20 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { Settings } from "../api/models";
+import { Settings } from "@sweettalker/common/src/models/profile/settings";
 import { serializeError } from "@/services/base/errors/utils/serializeError";
 import { ThunkAPI } from "@/store/types";
-import { setSettings } from "./slice";
-interface UpdateSettingsParams {
-  settings: Partial<Settings>;
-}
+
 export const updateSettings = createAsyncThunk<
   void,
-  UpdateSettingsParams,
+  Partial<Settings>,
   ThunkAPI
 >(
   "settings/updateSettings",
   async (
-    { settings }: UpdateSettingsParams,
-    { rejectWithValue, extra: { services }, dispatch }
+    settings: Partial<Settings>,
+    { rejectWithValue, extra: { services } }
   ) => {
     try {
-      dispatch(setSettings(settings));
-      await services.profileService.updateSettings(settings);
+      await services.profileService.update("", settings);
     } catch (error) {
       return rejectWithValue(serializeError(error));
     }

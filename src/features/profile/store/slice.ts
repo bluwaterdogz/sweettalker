@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Model } from "@/features/common/api/enums";
+import { Model } from "@common/types/model";
 
 interface SettingsState {
   model: Model;
@@ -7,39 +7,41 @@ interface SettingsState {
   loading: boolean;
   storeReady: boolean;
   initialized: boolean;
+  safeChat: boolean;
+  blockedUsers: string[];
 }
 
 const initialState: SettingsState = {
-  model: Model.Gpt3_5,
+  model: Model.Gpt35Turbo,
   notifications: true,
   loading: false,
   storeReady: false,
   initialized: false,
+  safeChat: false,
+  blockedUsers: [],
 };
 
 const settingsSlice = createSlice({
   name: "settings",
   initialState,
+
   reducers: {
     setSettings: (state, action: PayloadAction<Partial<SettingsState>>) => {
-      const { model, notifications } = action.payload;
-      Object.assign(state, { model, notifications });
+      const { model, notifications, safeChat, blockedUsers } = action.payload;
+      Object.assign(state, { model, notifications, safeChat, blockedUsers });
 
       // state.loading = true;
-      // if (action.payload.model !== undefined) {
-      //   state.model = action.payload.model;
-      // }
-      // if (action.payload.notifications !== undefined) {
-      //   state.notifications = action.payload.notifications;
-      // }
-      // if (action.payload.language !== undefined) {
-      //   state.language = action.payload.language;
-      // }
+      if (action.payload.model !== undefined) {
+        state.model = action.payload.model;
+      }
+      if (action.payload.notifications !== undefined) {
+        state.notifications = action.payload.notifications;
+      }
+      if (action.payload.safeChat !== undefined) {
+        state.safeChat = action.payload.safeChat;
+      }
       // state.loading = false;
       // state.initialized = true;
-    },
-    checkStoreState: (state) => {
-      console.log("🧠 checkStoreState called", state);
     },
     setStoreReady: (state, action: PayloadAction<boolean>) => {
       state.storeReady = action.payload;
@@ -50,6 +52,6 @@ const settingsSlice = createSlice({
   },
 });
 
-export const { setSettings, setStoreReady, resetSettings, checkStoreState } =
+export const { setSettings, setStoreReady, resetSettings } =
   settingsSlice.actions;
 export default settingsSlice.reducer;

@@ -9,4 +9,8 @@ export enum FirestoreCollections {
   REFRAMINGS = "reframings",
   USERS = "users",
   USER_REFRAMING_MESSAGES = "user_reframing_messages",
+  CHECK_INS = "check_ins",
+  CONVERSATIONS = "conversations",
+  MESSAGES = "messages",
+  USER_CONNECTIONS = "user_connections",
 }

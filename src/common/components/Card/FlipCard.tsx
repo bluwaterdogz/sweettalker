@@ -18,7 +18,7 @@ export const FlipCard: React.FC<FlipCardProps> = ({
   isFlipped = false,
   onFlip,
   style,
-}) => {
+}: FlipCardProps) => {
   const flipAnimation = useRef(new Animated.Value(0)).current;
   const frontRef = useRef<View>(null);
   const [frontHeight, setFrontHeight] = React.useState(0);

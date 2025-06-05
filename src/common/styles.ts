@@ -9,7 +9,7 @@ export const common = StyleSheet.create({
       height: 4,
     },
     shadowOpacity: 0.15,
-    shadowRadius: 10,
+    shadowRadius: 5,
 
     // Android elevation
     elevation: 4,
@@ -17,7 +17,23 @@ export const common = StyleSheet.create({
 
   row: {
     flexDirection: "row",
-    gap: 10,
+    gap: 16,
+  },
+  iconBadge: {
+    position: "absolute",
+    top: -20,
+    left: -25,
+  },
+  wrapRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 4,
+  },
+
+  scrollRow: {
+    flexDirection: "row",
+    overflow: "scroll",
+    gap: 4,
   },
   formContainer: {
     gap: 10,
@@ -31,3 +47,7 @@ export const common = StyleSheet.create({
     minHeight: 40,
   },
 });
+
+export const styleConsts = {
+  rowMarginBottom: 10,
+};

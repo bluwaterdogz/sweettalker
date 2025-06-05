@@ -10,7 +10,6 @@ import {
 import { useTheme } from "../../theme/hooks/useTheme";
 import { FlipCard } from "./FlipCard";
 import { Card } from "./Card";
-import { common } from "../../styles";
 
 interface CardListProps<T> {
   data: T[];

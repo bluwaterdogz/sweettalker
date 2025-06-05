@@ -8,11 +8,11 @@ export const authApi = axios.create({
   },
 });
 
-export const chatGPTApi = axios.create({
-  baseURL: "https://api.openai.com/v1",
+export const interpretationServiceApi = axios.create({
+  baseURL: "http://localhost:4000/api",
   headers: {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${process.env.EXPO_PUBLIC_CHAT_GPT_API_KEY}`,
+    Accept: "application/json, text/plain, */*",
   },
 });
 

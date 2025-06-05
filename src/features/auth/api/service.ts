@@ -5,11 +5,14 @@ import {
   LoginResponse,
   RegisterCredentials,
   RegisterResponse,
-  User,
 } from "./models";
 import { mapFirebaseUser } from "./mappers";
 import { isMockAuthEnabled, mockUser } from "./mock";
 import { withErrorHandling } from "@/services/base/errors/utils/withErrorHandling";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { firestore } from "@/app/firebase";
+import { serverTimestamp } from "firebase/firestore";
+import { User } from "firebase/auth";
 
 export class AuthService {
   constructor(private firebaseAuthService: FirebaseAuthService) {}
@@ -25,7 +28,9 @@ export class AuthService {
       email: credentials.email,
       password: credentials.password,
     };
+
     const response = await this.firebaseAuthService.signIn(signInRequest);
+    await this.syncUserDocument(response.user);
     return {
       user: mapFirebaseUser(response.user),
     };
@@ -44,6 +49,7 @@ export class AuthService {
       displayName: credentials.username,
     };
     const response = await this.firebaseAuthService.signUp(signUpRequest);
+    await this.syncUserDocument(response.user);
     return {
       user: mapFirebaseUser(response.user),
     };
@@ -67,6 +73,9 @@ export class AuthService {
       return () => {};
     }
     return this.firebaseAuthService.onAuthStateChange((firebaseUser) => {
+      if (firebaseUser) {
+        this.syncUserDocument(firebaseUser).catch(console.error);
+      }
       callback(firebaseUser ? { user: mapFirebaseUser(firebaseUser) } : null);
     });
   }
@@ -83,5 +92,36 @@ export class AuthService {
       return mockUser;
     }
     return this.firebaseAuthService.getCurrentUserIfExists();
+  }
+
+  private async syncUserDocument(user: User): Promise<void> {
+    const userRef = doc(firestore, "users", user.uid);
+    const userDoc = await getDoc(userRef);
+
+    const userData = {
+      email: user.email,
+      searchableEmail: user.email?.toLowerCase(),
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      updatedAt: serverTimestamp(),
+    };
+
+    if (!userDoc.exists()) {
+      // Create new user document if it doesn't exist
+      await setDoc(userRef, {
+        ...userData,
+        createdAt: serverTimestamp(),
+      });
+    } else {
+      // Update existing document if any properties have changed
+      const existingData = userDoc.data();
+      const hasChanges = Object.entries(userData).some(
+        ([key, value]) => existingData[key] !== value
+      );
+
+      if (hasChanges) {
+        await setDoc(userRef, userData, { merge: true });
+      }
+    }
   }
 }

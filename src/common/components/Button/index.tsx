@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import {
   TouchableOpacity,
   TouchableOpacityProps,
@@ -18,7 +18,7 @@ export interface ButtonProps extends TouchableOpacityProps {
   size?: "small" | "medium" | "large";
   loading?: boolean;
   fullWidth?: boolean;
-  title?: string;
+  title?: ReactNode;
   icon?: IconDefinition;
   style?: StyleProp<any>;
   buttonTextStyles?: StyleProp<any>;
@@ -38,7 +38,7 @@ export const Button: React.FC<ButtonProps> = ({
   flex,
   buttonTextStyles,
   ...props
-}) => {
+}: ButtonProps) => {
   const { colors, typography } = useTheme();
 
   const getBackgroundColor = () => {
@@ -56,7 +56,7 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const getTextColor = () => {
-    if (disabled) return colors.neutral[400];
+    if (disabled) return colors.neutral[600];
     switch (variant) {
       case "primary":
       case "secondary":
@@ -131,18 +131,22 @@ export const Button: React.FC<ButtonProps> = ({
             />
           )}
           {title ? (
-            <Text
-              style={[
-                getFontSize(),
-                {
-                  color: getTextColor(),
-                  textAlign: "center",
-                },
-                buttonTextStyles,
-              ]}
-            >
-              {title}
-            </Text>
+            typeof title === "string" ? (
+              <Text
+                style={[
+                  getFontSize(),
+                  {
+                    color: getTextColor(),
+                    textAlign: "center",
+                  },
+                  buttonTextStyles,
+                ]}
+              >
+                {title}
+              </Text>
+            ) : (
+              title
+            )
           ) : (
             children
           )}

@@ -10,7 +10,7 @@ interface CardContentProps {
 export const CardContent: React.FC<CardContentProps> = ({
   children,
   style,
-}) => {
+}: CardContentProps) => {
   const { colors } = useTheme();
 
   return (

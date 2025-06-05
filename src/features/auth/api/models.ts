@@ -1,7 +1,4 @@
-import { User as FirebaseUser } from "firebase/auth";
-
-// View Models
-export interface User extends FirebaseUser {}
+import { User } from "firebase/auth";
 
 export interface Credentials {
   email: string;

@@ -14,7 +14,7 @@ import {
   faSave,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/i18n/hooks/useTranslation";
 
 interface EditableTextProps {
   value: string;

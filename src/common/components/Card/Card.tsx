@@ -8,7 +8,11 @@ interface CardProps {
   style?: object;
 }
 
-export const Card: React.FC<CardProps> = ({ children, onPress, style }) => {
+export const Card: React.FC<CardProps> = ({
+  children,
+  onPress,
+  style,
+}: CardProps) => {
   const { colors } = useTheme();
   return (
     <Pressable

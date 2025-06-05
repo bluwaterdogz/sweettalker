@@ -1,3 +1,11 @@
+import { InterpretationType } from "@common/models/interpretation/interpretation";
+import {
+  ModalityIdentifier,
+  ModalityLabel,
+} from "@common/models/translation/translation-modality";
+import { Translation } from "@common/models/translation/translation";
+import { Timestamp } from "firebase/firestore";
+
 export const mockUserMessages = [
   //(F) – Feeling unheard, desperate to be understood
   "No, it's fine — really, don't worry about it. I just talk to hear myself anyway, right? God forbid you actually look up when I say something that matters.",
@@ -40,3 +48,171 @@ export const mockUserMessages = [
   //(M) – Frustrated, bitter, shut down
   "I'm tired of trying to talk about things that matter. You either change the subject or act like I'm overreacting. So yeah, maybe silence is easier.",
 ];
+
+export const mockTranslations: Translation[] = [
+  {
+    id: Math.random().toString(36).substring(2, 15),
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    createdBy: "assistant",
+    updatedBy: null,
+    text: "I really value your presence, and I feel hurt when I don't feel heard.",
+    description: "A gentle reframing expressing the need to feel heard.",
+    type: InterpretationType.TRANSLATION,
+    originalMessageId: "msg_0",
+    model: "gpt-4" as any,
+    promptOptions: {
+      modalities: [
+        {
+          id: ModalityIdentifier.EmpathicDialogue,
+          label: ModalityLabel.EmpathicDialogue,
+        },
+      ],
+      tone: "gentle",
+      emotions: ["hurt", "frustration"],
+      needs: ["presence", "understanding"],
+      userMessage: "You never pay attention when I’m talking.",
+      userInstructions: "Make it kind and constructive",
+      extraContext: "Romantic relationship context",
+    },
+    rating: 4,
+    favorite: false,
+    notes: "",
+    isEdit: false,
+  },
+  {
+    id: Math.random().toString(36).substring(2, 15),
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    createdBy: "assistant",
+    updatedBy: null,
+    text: "I reach out because I care deeply, but I’d love for you to initiate sometimes too.",
+    description: "Communicates desire for reciprocity without blame.",
+    type: InterpretationType.TRANSLATION,
+    originalMessageId: "msg_1",
+    model: "gpt-4" as any,
+    promptOptions: {
+      modalities: [
+        {
+          id: ModalityIdentifier.EmpathicDialogue,
+          label: ModalityLabel.EmpathicDialogue,
+        },
+      ],
+      tone: "warm",
+      emotions: ["loneliness", "hope"],
+      needs: ["mutual effort", "closeness"],
+      userMessage: "I feel like I’m always the one reaching out.",
+      userInstructions: "Make it inviting and clear",
+      extraContext: "Romantic relationship context",
+    },
+    rating: 5,
+    favorite: false,
+    notes: "",
+    isEdit: false,
+  },
+  {
+    id: Math.random().toString(36).substring(2, 15),
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    createdBy: "assistant",
+    updatedBy: null,
+    text: "I was really hoping you’d ask about my day. It means a lot when you do.",
+    description: "Softens hurt into a need for care and curiosity.",
+    type: InterpretationType.TRANSLATION,
+    originalMessageId: "msg_2",
+    model: "gpt-4" as any,
+    promptOptions: {
+      modalities: [
+        {
+          id: ModalityIdentifier.AuthenticRelating,
+          label: ModalityLabel.AuthenticRelating,
+        },
+      ],
+      tone: "honest",
+      emotions: ["disappointment", "longing"],
+      needs: ["attention", "empathy"],
+      userMessage: "You didn’t even ask how my day was.",
+      userInstructions: "Make it warm and reflective",
+      extraContext: "Romantic relationship context",
+    },
+    rating: 4,
+    favorite: false,
+    notes: "",
+    isEdit: false,
+  },
+  {
+    id: Math.random().toString(36).substring(2, 15),
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    createdBy: "assistant",
+    updatedBy: null,
+    text: "When we argue, I feel scared and disconnected. I wish we could stay open to each other.",
+    description: "Invites emotional openness during conflict.",
+    type: InterpretationType.TRANSLATION,
+    originalMessageId: "msg_3",
+    model: "gpt-4" as any,
+    promptOptions: {
+      modalities: [
+        {
+          id: ModalityIdentifier.EmotionallyFocusedCommunication,
+          label: ModalityLabel.EmotionallyFocusedCommunication,
+        },
+      ],
+      tone: "vulnerable",
+      emotions: ["fear", "disconnect"],
+      needs: ["emotional safety", "connection"],
+      userMessage: "Why do you always shut down when we argue?",
+      userInstructions: "Make it soft and vulnerable",
+      extraContext: "Romantic relationship context",
+    },
+    rating: 5,
+    favorite: true,
+    notes: "This one really worked well in session.",
+    isEdit: false,
+  },
+  {
+    id: Math.random().toString(36).substring(2, 15),
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    createdBy: "assistant",
+    updatedBy: null,
+    text: "Sometimes I feel uncared for, and I really need reassurance that I matter to you.",
+    description: "Expresses longing for emotional reassurance.",
+    type: InterpretationType.TRANSLATION,
+    originalMessageId: "msg_4",
+    model: "gpt-4" as any,
+    promptOptions: {
+      modalities: [
+        {
+          id: ModalityIdentifier.RelationalMindfulness,
+          label: ModalityLabel.RelationalMindfulness,
+        },
+      ],
+      tone: "tender",
+      emotions: ["insecurity", "sadness"],
+      needs: ["reassurance", "importance"],
+      userMessage: "It’s like you don’t even care sometimes.",
+      userInstructions: "Make it tender and validating",
+      extraContext: "Romantic relationship context",
+    },
+    rating: 5,
+    favorite: false,
+    notes: "",
+    isEdit: false,
+  },
+];
+
+export function getRandomTranslation(
+  overrides: Partial<Translation> = {}
+): Translation {
+  const base =
+    mockTranslations[Math.floor(Math.random() * mockTranslations.length)];
+  return {
+    ...base,
+    ...overrides,
+    promptOptions: {
+      ...base.promptOptions,
+      ...(overrides.promptOptions ?? {}),
+    },
+  };
+}

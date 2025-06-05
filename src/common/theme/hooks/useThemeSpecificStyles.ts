@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTheme } from "./useTheme";
-import { ThemeLabel } from "../types";
+import { ThemeLabel } from "../../../../../common/src/types/theme/types";
 import { StyleProp } from "react-native";
 
 export const useThemeSpecificStyles = (

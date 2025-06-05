@@ -1,20 +1,18 @@
 import React, { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useTheme } from "@/common/theme/hooks/useTheme";
-import { Edit, Translation } from "../api/models";
 import { useAppDispatch } from "@/store";
 import { updateTranslation } from "@/features/translation/store/thunks";
 import {
   EditableText,
   TitledBlock,
-  Slider,
   ContentDropdown,
+  CardContent,
 } from "@/common/components";
-import { UserMessage } from "@/features/common/api/models";
-import { useTranslation } from "react-i18next";
-
-import { formatTimeStamp } from "@/common/utils";
-import { InterpretationCard } from "@/features/common/components/InterpretationCard";
+import { useTranslation } from "@/i18n/hooks/useTranslation";
+import { Translation } from "@common/models/translation/translation";
+import { UserMessage } from "@common/models/interpretation/user-message";
+import { TranslationCardHeader } from "./TranslationCardHeader";
 
 interface TranslationCardProps {
   translation: Translation;
@@ -22,6 +20,7 @@ interface TranslationCardProps {
   onUpdate: (id: string, data: Partial<Translation>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onUpdateText: (id: string, text: string) => Promise<void>;
+  onInsert?: (translation: Translation) => void;
 }
 
 export const TranslationCard: React.FC<TranslationCardProps> = ({
@@ -30,103 +29,136 @@ export const TranslationCard: React.FC<TranslationCardProps> = ({
   onUpdate,
   onDelete,
   onUpdateText,
+  onInsert,
 }) => {
   const { colors, typography } = useTheme();
   const { t } = useTranslation();
 
   const dispatch = useAppDispatch();
 
-  const slides = useMemo(() => {
-    return translation.priorEdits.map((edit) => {
-      return {
-        id: edit.id,
-        title: formatTimeStamp(edit.createdAt),
-        content: <EditSlideContent edit={edit} />,
-      };
-    });
-  }, [translation.priorEdits]);
+  // const slides = useMemo(() => {
+  //   return translation.priorEdits.map((edit) => {
+  //     return {
+  //       id: edit.id,
+  //       title: formatTimeStamp(edit.createdAt),
+  //       content: <EditSlideContent edit={edit} />,
+  //     };
+  //   });
+  // }, [translation.priorEdits]);
 
   return (
-    <InterpretationCard
-      key={translation.id}
-      item={translation}
-      onUpdate={onUpdate}
-      onDelete={onDelete}
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background.primary,
+        },
+      ]}
     >
-      <View>
-        <TitledBlock
-          titleStyles={[
-            typography.titleSmall,
-            { color: colors.text.secondary },
-          ]}
-          title={t("translation.title")}
-        >
-          <EditableText
-            value={translation.text}
-            inputStyle={[typography.bodyLarge, { color: colors.text.primary }]}
-            onChange={(text: string) => onUpdateText(translation.id, text)}
-          />
-        </TitledBlock>
-        <ContentDropdown>
+      <TranslationCardHeader
+        title={translation.title || "Translation"}
+        entity={translation}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+        onInsert={onInsert}
+      />
+      <CardContent
+        style={[styles.content, { backgroundColor: colors.background.primary }]}
+      >
+        <View>
           <TitledBlock
-            title={t("common.original")}
-            text={`"${userMessage?.text ?? "..."}"`}
-          />
-          <TitledBlock
-            title={t("common.description")}
-            text={translation.description}
-          />
-          {slides.length > 0 && (
+            titleStyles={[
+              typography.titleSmall,
+              { color: colors.text.secondary },
+            ]}
+            title={t("translation.title")}
+          >
+            <EditableText
+              value={translation.text}
+              inputStyle={[
+                typography.bodyLarge,
+                { color: colors.text.primary },
+              ]}
+              onChange={(text: string) => onUpdateText(translation.id, text)}
+            />
+          </TitledBlock>
+          <ContentDropdown>
+            <TitledBlock
+              title={t("common.original")}
+              text={`"${userMessage?.text ?? "..."}"`}
+            />
+            <TitledBlock
+              title={t("common.description")}
+              text={translation.description}
+            />
+            {/* {slides.length > 0 && (
             <TitledBlock title={t("common.edits")}>
               <Slider slides={slides} />
             </TitledBlock>
-          )}
-          <TitledBlock
-            titleStyles={[
-              typography.labelMedium,
-              { color: colors.text.secondary },
-            ]}
-            title={t("common.notes")}
-          >
-            <EditableText
-              style={[typography.bodySmall, { color: colors.text.secondary }]}
-              inputStyle={[
-                typography.bodySmall,
-                { color: colors.text.primary },
+          )} */}
+            <TitledBlock
+              titleStyles={[
+                typography.labelMedium,
+                { color: colors.text.secondary },
               ]}
-              value={translation.notes || ""}
-              onChange={(text: string) =>
-                dispatch(updateTranslation({ id: translation.id, notes: text }))
-              }
-            />
-          </TitledBlock>
-        </ContentDropdown>
-      </View>
-    </InterpretationCard>
-  );
-};
-
-const EditSlideContent = ({ edit }: { edit: Edit }) => {
-  const { colors, typography } = useTheme();
-  return (
-    <View>
-      <Text
-        style={[
-          typography.labelSmall,
-          styles.slideDate,
-          { color: colors.text.secondary },
-        ]}
-      >
-        {formatTimeStamp(edit.createdAt)}
-      </Text>
-      <Text style={[typography.bodySmall, { color: colors.text.secondary }]}>
-        {edit.text}
-      </Text>
+              title={t("common.notes")}
+            >
+              <EditableText
+                style={[typography.bodySmall, { color: colors.text.secondary }]}
+                inputStyle={[
+                  typography.bodySmall,
+                  { color: colors.text.primary },
+                ]}
+                value={translation.notes || ""}
+                onChange={(text: string) =>
+                  dispatch(
+                    updateTranslation({ id: translation.id, notes: text })
+                  )
+                }
+              />
+            </TitledBlock>
+          </ContentDropdown>
+        </View>
+      </CardContent>
     </View>
   );
 };
 
+// const EditSlideContent = ({ edit }: { edit: Edit }) => {
+//   const { colors, typography } = useTheme();
+//   return (
+//     <View>
+//       <Text
+//         style={[
+//           typography.labelSmall,
+//           styles.slideDate,
+//           { color: colors.text.secondary },
+//         ]}
+//       >
+//         {formatTimeStamp(edit.createdAt)}
+//       </Text>
+//       <Text style={[typography.bodySmall, { color: colors.text.secondary }]}>
+//         {edit.text}
+//       </Text>
+//     </View>
+//   );
+// };
+
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    display: "flex",
+    gap: 8,
+    flexDirection: "column",
+    justifyContent: "space-between",
+  },
+  content: {
+    flex: 1,
+    display: "flex",
+    gap: 8,
+    flexDirection: "column",
+    justifyContent: "space-between",
+  },
   notesLabel: {
     marginBottom: 8,
   },

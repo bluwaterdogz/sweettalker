@@ -14,6 +14,8 @@ export * from "./CircleButton";
 export * from "./Drawer";
 export * from "./MultiSelect";
 export * from "./ListControls";
+export * from "./SearchableList";
+export * from "./GroupedList";
 export * from "./EditableText";
 export * from "./TitledBlock";
 export * from "./Slider";

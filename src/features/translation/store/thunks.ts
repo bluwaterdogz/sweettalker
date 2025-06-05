@@ -1,41 +1,33 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import type {
+import {
   Translation,
-  TranslationApi,
-} from "@/features/translation/api/models";
+  TranslationDTO,
+} from "@common/models/translation/translation";
 import { ThunkAPI } from "@/store/types";
-import { Model } from "@/features/common/api/enums";
+import { Model } from "@common/types/model";
 import { serializeError } from "@/services/base/errors/utils/serializeError";
 
-interface TranslateTextParams {
-  input: string;
-}
-
 export const translateText = createAsyncThunk<
-  TranslationApi[],
-  TranslateTextParams,
+  TranslationDTO[],
+  { input: string },
   ThunkAPI
 >(
   "translation/translateText",
   async ({ input }, { rejectWithValue, getState, extra: { services } }) => {
     try {
-      const model = Model.Gpt3_5;
-      const { translation } = getState();
       const translations = await services.translationService.interpret({
-        model,
         input,
-        options: {
-          modalities: translation.modalities,
-          tone: translation.tone,
-          // userInstructions: translation.userInstructions,
-          // extraContext: translation.extraContext,
-        },
+        model: Model.Gpt35Turbo,
+        options: {},
       });
 
-      await services.translationService.persist(translations, {
-        model,
-        userText: input,
-      });
+      await services.translationService.createList(
+        translations.map((t) => ({
+          ...t,
+          model: Model.Gpt35Turbo,
+          input,
+        }))
+      );
 
       return translations;
     } catch (error) {

@@ -37,6 +37,7 @@ export const CardHeader = ({
           onChange={onEditTitle}
           controls={controls}
           value={title}
+          editable={false}
         />
       </View>
       {children}

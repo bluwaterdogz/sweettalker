@@ -1,11 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Modality, Translation } from "../api/models";
+import { Modality } from "@common/models/translation/translation-modality";
+import { Translation } from "@common/models/translation/translation";
 import { translateText } from "./thunks";
+import { SerializableError } from "@/store/types";
 
-interface SerializableError {
-  message: string;
-  name: string;
-  stack?: string;
+interface TranslationFilters {
+  search?: string;
+  showOnlyFavorites?: boolean;
 }
 
 interface TranslationState {
@@ -15,6 +16,7 @@ interface TranslationState {
   conversationContext: string;
   modalities: Modality[];
   tone: string | undefined;
+  filters: TranslationFilters;
 }
 
 const initialState: TranslationState = {
@@ -24,11 +26,16 @@ const initialState: TranslationState = {
   conversationContext: "",
   modalities: [],
   tone: undefined,
+  filters: {
+    search: "",
+    showOnlyFavorites: false,
+  },
 };
 
 const translationSlice = createSlice({
   name: "translation",
   initialState,
+
   reducers: {
     setConversationContext: (state, action: PayloadAction<string>) => {
       state.conversationContext = action.payload;
@@ -36,8 +43,11 @@ const translationSlice = createSlice({
     setModalities: (state, action: PayloadAction<Modality[]>) => {
       state.modalities = action.payload;
     },
-    setTone: (state, action: PayloadAction<string>) => {
+    setTone: (state, action: PayloadAction<string | undefined>) => {
       state.tone = action.payload;
+    },
+    setFilters: (state, action: PayloadAction<TranslationFilters>) => {
+      Object.assign(state.filters, action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -58,7 +68,7 @@ const translationSlice = createSlice({
   },
 });
 
-export const { setConversationContext, setModalities, setTone } =
+export const { setConversationContext, setModalities, setTone, setFilters } =
   translationSlice.actions;
 
 export default translationSlice.reducer;

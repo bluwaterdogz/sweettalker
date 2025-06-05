@@ -1,8 +1,8 @@
 import React from "react";
 import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { useTheme } from "@/common/theme/hooks/useTheme";
-import { useBilling } from "../context";
-import { BillingProduct } from "../api/models";
+import { useBilling } from "../context/context";
+import { BillingProduct } from "@sweettalker/common/src/models";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faCoins, faInfinity } from "@fortawesome/free-solid-svg-icons";
 

@@ -1,34 +1,34 @@
-import { mockUser } from "../api/mock";
-import { isMockAuthEnabled } from "../api/mock";
-import { useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "@/firebase"; // your Firebase auth instance
+import { auth } from "@/app/firebase";
+import { createSingletonHook } from "@/common/hooks/createSingletonHook";
+import { isMockAuthEnabled, mockUser } from "../api/mock";
 
-export const useUser = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<unknown>(null);
+interface UserState {
+  user: User | null;
+  loading: boolean;
+  error: unknown;
+}
 
-  useEffect(() => {
-    if (isMockAuthEnabled()) {
-      setUser(mockUser);
-      setLoading(false);
-      return;
+const getInitialState = (): UserState => ({
+  user: null,
+  loading: true,
+  error: null,
+});
+
+export const useUser = createSingletonHook<UserState>((setState) => {
+  if (isMockAuthEnabled()) {
+    setState({ user: mockUser, loading: false, error: null });
+    return () => {};
+  }
+  setState({ user: null, loading: true, error: null });
+  const unsubscribe = onAuthStateChanged(
+    auth,
+    (firebaseUser) => {
+      setState({ user: firebaseUser, loading: false, error: null });
+    },
+    (err) => {
+      setState({ user: null, loading: false, error: err });
     }
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (firebaseUser) => {
-        setUser(firebaseUser);
-        setLoading(false);
-      },
-      (err) => {
-        setError(err);
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
-  return { user, loading, error };
-};
+  );
+  return unsubscribe;
+}, getInitialState);

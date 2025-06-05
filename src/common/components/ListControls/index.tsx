@@ -1,13 +1,14 @@
 import { useTheme } from "../../theme/hooks/useTheme";
 import { Text, View, StyleSheet, StyleProp, ViewStyle } from "react-native";
 import { TextInput } from "../TextInput";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/i18n/hooks/useTranslation";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 
 interface ListControlsProps {
   setSearch: (search: string) => void;
-  setShowOnlyFavorites: (showOnlyFavorites: boolean) => void;
+  setShowOnlyFavorites?: (showOnlyFavorites: boolean) => void;
   search: string;
-  showOnlyFavorites: boolean;
+  showOnlyFavorites?: boolean;
   disabled?: boolean;
   searchStyle?: StyleProp<ViewStyle>;
   style?: StyleProp<ViewStyle>;
@@ -28,6 +29,7 @@ export const ListControls = ({
     <View style={[styles.controls, style]}>
       <View style={styles.searchInput}>
         <TextInput
+          leftIcon={faMagnifyingGlass}
           value={search}
           onChangeText={setSearch}
           placeholder={t("common.search")}
@@ -35,22 +37,26 @@ export const ListControls = ({
           style={searchStyle}
         />
       </View>
-      <Text
-        style={[
-          styles.favoriteButton,
-          {
-            color: showOnlyFavorites
-              ? colors.accent.primary
-              : colors.text.secondary,
-            opacity: disabled ? 0.5 : 1,
-          },
-        ]}
-        onPress={() => !disabled && setShowOnlyFavorites(!showOnlyFavorites)}
-      >
-        {showOnlyFavorites
-          ? `★ ${t("common.favorites")}`
-          : `☆ ${t("common.all")}`}
-      </Text>
+      {setShowOnlyFavorites != null && (
+        <Text
+          style={[
+            styles.favoriteButton,
+            {
+              color: showOnlyFavorites
+                ? colors.accent.primary
+                : colors.text.secondary,
+              opacity: disabled ? 0.5 : 1,
+            },
+          ]}
+          onPress={() =>
+            !disabled && setShowOnlyFavorites?.(!showOnlyFavorites)
+          }
+        >
+          {showOnlyFavorites
+            ? `★ ${t("common.favorites")}`
+            : `☆ ${t("common.all")}`}
+        </Text>
+      )}
     </View>
   );
 };
@@ -64,10 +70,9 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    marginRight: 8,
-    paddingVertical: 8,
   },
   favoriteButton: {
+    marginLeft: 8,
     width: "auto",
     flex: 0,
     display: "flex",

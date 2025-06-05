@@ -1,24 +1,33 @@
-import React, { useCallback, useMemo } from "react";
-import { Translation } from "../api/models";
+import React, { useCallback, useMemo, useState } from "react";
+import { Translation } from "@common/models/translation/translation";
 import { useServices } from "@/services/context";
 import { useSubscribeFirestore } from "@/services/firebase/hooks/useSubscribeFirestore";
-import { UserMessage } from "@/features/common/api/models";
+import { UserMessage } from "@common/models/interpretation/user-message";
 import { keyBy } from "lodash";
-import { InterpretationList } from "@/features/common/components/InterpretationList";
+import { InterpretationList } from "@/features/interpretation/components/InterpretationList";
 import { updateTranslation, updateTranslationText } from "../store/thunks";
 import { deleteTranslation } from "../store/thunks";
-import { useAppDispatch } from "@/store";
-import { useToast } from "@/common/features/Toast";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { useToast } from "@/common/components/Toast";
 import { TranslationCard } from "./TranslationCard";
+import Fuse from "fuse.js";
+import { useAppNavigation } from "@/app/navigation/hooks/useAppNavigation";
 
 interface PopulatedTranslation extends Translation {
   userMessage: UserMessage;
 }
 
-export const TranslationList = () => {
+interface TranslationListProps {
+  conversationId?: string;
+}
+
+export const TranslationList = ({ conversationId }: TranslationListProps) => {
   const { translationService } = useServices();
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
+  const { filters } = useAppSelector((state) => state.translation);
+  const { search = "", showOnlyFavorites = false } = filters;
+  const navigation = useAppNavigation();
 
   const {
     result: translations,
@@ -44,9 +53,21 @@ export const TranslationList = () => {
     () =>
       (translations || []).map((t) => ({
         ...t,
-        userMessage: userMessagesHashmap[t.userMessageId],
+        userMessage: userMessagesHashmap[t.originalMessageId],
       })),
     [translations, userMessagesHashmap]
+  );
+
+  const insertIntoConversation = useCallback(
+    (translation: Translation) => {
+      if (conversationId) {
+        navigation.navigate("Conversation", {
+          conversationId,
+          initialMessage: translation.text,
+        });
+      }
+    },
+    [conversationId, navigation]
   );
 
   const onUpdateTranslation = useCallback(
@@ -83,24 +104,46 @@ export const TranslationList = () => {
     [translationService, showToast]
   );
 
-  return (
-    <InterpretationList<PopulatedTranslation>
-      searchKeys={[
+  const fuseOptions = useMemo(
+    () => ({
+      keys: [
         "text",
+        "title",
+        "modality.label",
         "description",
         "notes",
         "edits.text",
-        "title",
         "userMessage.text",
-      ]}
-      items={populatedTranslations}
+      ],
+      threshold: 0.4,
+    }),
+    []
+  );
+
+  const filteredItems = useMemo(() => {
+    let filteredItems = populatedTranslations;
+
+    if (showOnlyFavorites) {
+      filteredItems = populatedTranslations.filter((t) => t.favorite);
+    }
+    if (search.trim()) {
+      const fuse = new Fuse(filteredItems, fuseOptions);
+      return fuse.search(search).map((r: any) => r.item);
+    }
+    return populatedTranslations;
+  }, [populatedTranslations, search, showOnlyFavorites]);
+
+  return (
+    <InterpretationList<PopulatedTranslation>
+      items={filteredItems}
       renderItem={(item) => (
         <TranslationCard
           translation={item}
-          userMessage={userMessagesHashmap[item.userMessageId]}
+          userMessage={userMessagesHashmap[item.originalMessageId]}
           onUpdate={onUpdateTranslation}
           onDelete={onDeleteTranslation}
           onUpdateText={onUpdateTranslationText}
+          onInsert={insertIntoConversation}
         />
       )}
     />

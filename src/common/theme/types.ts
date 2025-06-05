@@ -1,5 +1,3 @@
-import { TextStyle } from "react-native";
-
 export enum ThemeLabel {
   dark = "dark",
   light = "light",
@@ -30,6 +28,7 @@ export interface ThemeColors {
   error: ThemeItem;
   accent: ThemeItem;
   secondaryAccent: ThemeItem;
+  shadow: ThemeItem;
   neutral: {
     [key in NeutralKeys]: string;
   };
@@ -37,8 +36,8 @@ export interface ThemeColors {
 }
 
 interface TypographyObject {
-  fontSize: TextStyle["fontSize"];
-  fontWeight: TextStyle["fontWeight"];
+  fontSize: number;
+  fontWeight: number;
 }
 
 export enum TypographyKeys {

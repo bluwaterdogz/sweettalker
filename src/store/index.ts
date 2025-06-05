@@ -1,11 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import firebaseAuthReducer from "@/features/auth/store/slice";
 import translationReducer from "@/features/translation/store/slice";
-import reframingReducer from "@/features/reframing/store/slice";
 import settingsReducer from "@/features/profile/store/slice";
+import conversationReducer from "@/features/conversation/store/slice";
+import { checkInReducer } from "@/features/check-in/store/store";
+
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { Services } from "@/services/types";
-import storage from "redux-persist/lib/storage";
 
 import { InjectedFunctions } from "./types";
 import authReducer from "@/features/auth/store/slice";
@@ -20,29 +21,37 @@ import {
   REHYDRATE,
 } from "redux-persist";
 
-// const persistConfig = {
-//   key: "root",
-//   storage,
-//   whitelist: ["settings"],
-// };
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+// Should show JSON data
+const persistConfig = {
+  key: "root",
+  storage: AsyncStorage,
+  whitelist: ["settings"],
+};
 
 const reducers = {
   firebaseAuth: firebaseAuthReducer,
   translation: translationReducer,
-  reframing: reframingReducer,
   settings: settingsReducer,
   auth: authReducer,
+  checkIn: checkInReducer,
+  conversation: conversationReducer,
 };
-// const rootReducer = combineReducers(reducers);
+const rootReducer = combineReducers(reducers);
 
-// const persistedReducer = persistReducer(persistConfig, rootReducer);
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+const loggingMiddleware = (storeAPI: any) => (next: any) => (action: any) => {
+  return next(action);
+};
 
 export const createStore = (
   services: Services,
   functions: InjectedFunctions
 ) => {
   return configureStore({
-    reducer: reducers,
+    reducer: persistedReducer, // reducer
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
         serializableCheck: {
@@ -55,6 +64,7 @@ export const createStore = (
           },
         },
       }),
+    // .concat(loggingMiddleware),
   });
 };
 

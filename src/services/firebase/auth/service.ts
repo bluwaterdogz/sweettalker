@@ -28,16 +28,6 @@ export class FirebaseAuthService {
   })
   async signUp(request: SignUpRequest): Promise<SignUpResponse> {
     const user = await this.authClient.signUp(request);
-    // Initialize user data in database
-    // await create({
-    //   collectionName: COLLECTIONS.USERS,
-    //   data: {
-    //     displayName: request.displayName,
-    //     email: request.email,
-    //     preferences: DEFAULT_USER_PREFERENCES,
-    //   },
-    //   id: user.uid,
-    // });
     return { user };
   }
 

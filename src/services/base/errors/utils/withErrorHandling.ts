@@ -4,7 +4,7 @@ import { retry } from "./retry";
 interface ErrorHandlingOptions {
   maxRetries?: number;
   shouldRetry?: (error: unknown) => boolean;
-  errorMessage?: string;
+  errorMessage?: string | ((ctx: any, method: string | symbol) => string);
 }
 
 type MethodDecorator = (
@@ -24,17 +24,25 @@ export function withErrorHandling(
     const originalMethod = descriptor.value;
 
     descriptor.value = function (...args: any[]) {
-      try {
-        const result = originalMethod.apply(this, args);
+      const methodName = String(propertyKey);
+      const context = this;
 
-        // Handle async functions
+      const logError = (error: unknown) => {
+        const dynamicMessage =
+          typeof options.errorMessage === "function"
+            ? options.errorMessage(context, methodName)
+            : options.errorMessage || `Error in ${methodName}:`;
+
+        console.error(dynamicMessage, error);
+      };
+
+      try {
+        const result = originalMethod.apply(context, args);
+
         if (result instanceof Promise) {
           return result.catch((error) => {
-            console.error(
-              options.errorMessage || `Error in ${String(propertyKey)}:`,
-              error
-            );
-            return retry(() => originalMethod.apply(this, args), error, {
+            logError(error);
+            return retry(() => originalMethod.apply(context, args), error, {
               maxRetries: options.maxRetries,
               shouldRetry:
                 options.shouldRetry ||
@@ -43,14 +51,10 @@ export function withErrorHandling(
           });
         }
 
-        // Handle sync functions
         return result;
       } catch (error) {
-        console.error(
-          options.errorMessage || `Error in ${String(propertyKey)}:`,
-          error
-        );
-        return retry(() => originalMethod.apply(this, args), error, {
+        logError(error);
+        return retry(() => originalMethod.apply(context, args), error, {
           maxRetries: options.maxRetries,
           shouldRetry:
             options.shouldRetry || ((err) => !(err instanceof ValidationError)),

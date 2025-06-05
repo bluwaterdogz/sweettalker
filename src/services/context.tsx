@@ -1,18 +1,20 @@
 import React, { createContext, useContext, useMemo } from "react";
 import { Services } from "./types";
+import { TranslationDTO } from "@common/models/translation/translation";
 import { TranslationService } from "@/features/translation/api/service";
-import { ReframingService } from "@/features/reframing/api/service";
-
-import { FirebaseService } from "./firebase/data/service";
+import { FirebaseService } from "./firebase/data/FirebaseService";
 import { ProfileService } from "@/features/profile/api/service";
-import { BillingService } from "@/features/billing/api/service";
+import { BillingService } from "@/features/billing/api/BillingService";
 import { AdsService } from "../features/advertisement/api/service";
-import { InterpretationClient } from "@/features/common";
-import { TranslationApi } from "@/features/translation/api/models";
-import { ReframingApi } from "@/features/reframing/api/models";
+import { InterpretationClient } from "@/features/interpretation/api/InterpretationClient";
 import { FirebaseAuthService } from "./firebase/auth/service";
 import { FirebaseAuthClient } from "./firebase/auth/client";
 import { AuthService } from "@/features/auth/api/service";
+import { ConversationService } from "@/features/conversation/api/ConversationService";
+import { CheckInService } from "@/features/check-in/api/CheckInService";
+import { MessageService } from "@/features/conversation/api/MessageService";
+import { ConnectionService } from "@/features/contacts/api/ConnectionService";
+import { ContactService } from "@/features/contacts/api/ContactService";
 
 const ServiceContext = createContext<Services | null>(null);
 
@@ -34,20 +36,31 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({
     [firebaseAuthService]
   );
 
+  const conversationService = useMemo(
+    () => new ConversationService(firebaseService),
+    [firebaseService]
+  );
+
   const services = useMemo(
     () => ({
       translationService: new TranslationService(
-        new InterpretationClient<TranslationApi>(),
-        firebaseService
-      ),
-      reframingService: new ReframingService(
-        new InterpretationClient<ReframingApi>(),
-        firebaseService
+        new InterpretationClient<TranslationDTO>(),
+        firebaseService,
+        authService
       ),
       profileService: new ProfileService(firebaseService, authService),
       billingService: new BillingService(firebaseService),
       adsService: new AdsService(),
+      conversationService,
       authService: authService,
+      checkInService: new CheckInService(firebaseService, authService),
+      messageService: new MessageService(
+        firebaseService,
+        conversationService,
+        authService
+      ),
+      connectionService: new ConnectionService(firebaseService),
+      contactService: new ContactService(firebaseService),
     }),
     [firebaseService, authService]
   );

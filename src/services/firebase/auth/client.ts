@@ -8,9 +8,11 @@ import {
   User,
 } from "firebase/auth";
 import { SignInRequest, SignUpRequest, ResetPasswordRequest } from "./types";
-import { auth } from "@/firebase";
+import { auth, firestore } from "@/app/firebase";
 import { mockUser } from "@/features/auth/api/mock";
 import { isMockAuthEnabled } from "@/features/auth/api/mock";
+import { doc, setDoc } from "firebase/firestore";
+import { serverTimestamp } from "firebase/firestore";
 
 // Auth client implementation
 export class FirebaseAuthClient {
@@ -32,6 +34,7 @@ export class FirebaseAuthClient {
     await updateProfile(userCredential.user, {
       displayName: request.displayName,
     });
+
     return userCredential.user;
   }
 

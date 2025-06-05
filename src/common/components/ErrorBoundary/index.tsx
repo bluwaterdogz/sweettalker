@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import { Component, ErrorInfo, ReactNode } from "react";
 import { View, StyleSheet, Text } from "react-native";
 import { Button } from "../Button";
 import { typography } from "../../theme/typography/typography";
@@ -44,6 +44,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <Button
             onPress={() => this.setState({ hasError: false, error: null })}
             style={[styles.button, typography.bodyMedium]}
+            variant="outline"
           >
             Try again
           </Button>

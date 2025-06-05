@@ -1,18 +1,18 @@
-import { ThemeColors } from "../types";
+import { ThemeColors } from "../../../../../common/src/types/theme/types";
 
 export const lightPalette: ThemeColors = {
   // Background colors
   background: {
     primary: "#FFFFFF",
     secondary: "#F5F5F5",
-    tertiary: "#EDF2F4",
+    tertiary: "#666666",
   },
 
   // Text colors
   text: {
     primary: "#000000",
     secondary: "#949594",
-    tertiary: "#666666",
+    tertiary: "#F5F5F5",
   },
   success: {
     primary: "#1FAA8C", // Aqua green — fresh and modern
@@ -34,6 +34,11 @@ export const lightPalette: ThemeColors = {
     secondary: "#FFA180", // Peachy highlight — energetic and warm
     tertiary: "#C04A1E", // Deep terracotta for grounding
   },
+  shadow: {
+    primary: "#000000",
+    secondary: "#000000",
+    tertiary: "#000000",
+  },
   // Neutral colors
   neutral: {
     100: "#E0E0E0",
@@ -46,91 +51,56 @@ export const lightPalette: ThemeColors = {
     800: "#202020",
     900: "#101010",
   },
-  listItemColors: ["#007991"],
+  listItemColors: [
+    "#EC7D9D", // Romantic – soft rose-pink
+    "#A187F2", // Platonic – lavender purple
+    "#4DC9DA", // Professional – aqua-cyan
+    "#F3A953", // Warm support – apricot gold
+    "#7BCFA1", // Grounded – soft mint green
+    "#F27878", // Vulnerability – peachy red
+    "#B886EB", // Insight – soft violet
+    "#50BFA2", // Calm – seafoam green
+    "#FFAA8A", // Emotional warmth – coral-sand
+    "#80C7E4", // Clarity – pale sky blue
+    "#E68BB7", // Affection – muted magenta pink
+    "#9CB6F2", // Trust – periwinkle blue
+    "#7FD8BE", // Reassurance – jade seafoam
+    "#F5B971", // Nurture – soft golden caramel
+    "#D98FEC", // Wonder – orchid lilac
+    "#9ED284", // Safety – muted spring green
+    "#F88A65", // Tenderness – dusty cantaloupe
+    "#B5A1F0", // Curiosity – powder violet
+    "#6AD1C9", // Flow – turquoise mist
+    "#FAB27B", // Encouragement – warm tangerine
+    "#EDA0C1", // Sweetness – pastel rose
+    "#94D0F2", // Openness – soft sky blue
+    "#F7B77E", // Compassion – muted apricot
+    "#A5E4C2", // Ease – light eucalyptus
+    "#C2A3F6", // Reverence – soft lilac glow
+    "#FFC3A0", // Gentleness – peachy blush
+    "#89CFF0", // Clarity – baby blue
+    "#F7A4B3", // Innocence – bubblegum rose
+    "#BFD8B8", // Patience – herbal green
+    "#F2D49B", // Softness – creamy sand
+    "#ACD8E5", // Serenity – arctic blue
+    "#EFB2FF", // Playfulness – candy lavender
+    "#D6A4DC", // Wonder – dusty orchid
+    "#FFE7A2", // Light – pastel sunflower
+    "#9AD1B9", // Relief – cool jade
+    "#E3AFA8", // Warmth – clay pink
+    "#A7B7F7", // Reflection – faded denim
+    "#F9B5A3", // Tenderness – apricot milk
+    "#C5F1DD", // Balance – soft aloe
+    "#E4BAF3", // Mystery – frosted lilac
+    "#FFD1DC", // Soft Love – cherry blossom
+    "#BCD2F2", // Curiosity – powdery lake
+    "#FABDA3", // Kindness – papaya cream
+    "#9CEBEB", // Relief – breezy aqua
+    "#FBD4A8", // Support – honey mist
+    "#B8E2B0", // Growth – fresh leaf
+    "#DDC1FF", // Imagination – pastel plum
+    "#F3A6C8", // Romance – strawberry cloud
+    "#C9DAF8", // Trust – glacial periwinkle
+    "#F9CFAA", // Joy – vanilla peach
+  ],
 };
-
-// export const lightPalette: ThemeColors = {
-//   // Brand colors
-//   brand: {
-//     spaceCadet: "#222E50", // Deep blue-purple
-//     cerulean: "#007991", // Bright blue
-//     indianRed: "#EB5160", // Warm red
-//     celadon: "#BCD8C1", // Soft green
-//     antiflashWhite: "#EDF2F4", // Off-white
-//   },
-
-//   // Primary colors
-//   primary: {
-//     main: "#007991", // Using cerulean as secondary
-//     light: "#00A5C4",
-//     dark: "#005A6B",
-//   },
-
-//   // Secondary colors
-//   secondary: {
-//     main: "#222E50",
-//     light: "#2B3A66",
-//     dark: "#1A223D",
-//   },
-
-//   // Background colors
-//   background: {
-//     default: "#FFFFFF",
-//     paper: "#F5F5F5",
-//   },
-
-//   // Text colors
-//   text: {
-//     primary: "#000000",
-//     secondary: "#666666",
-//     light: "#FFFFFF",
-//   },
-
-//   // Status colors
-//   success: {
-//     main: "#4CAF50",
-//     light: "#81C784",
-//     dark: "#388E3C",
-//   },
-
-//   error: {
-//     main: "#F44336",
-//     light: "#E57373",
-//     dark: "#D32F2F",
-//   },
-
-//   accent: {
-//     main: "#FFC107",
-//     light: "#FFD54F",
-//     dark: "#FFA000",
-//   },
-//   // Accent colors
-//   //   accent: {
-//   //     purple: "#222E50", // Using spaceCadet
-//   //     orange: "#FF9800",
-//   //     pink: "#EB5160", // Using indianRed
-//   //     blue: "#007991", // Using cerulean
-//   //   },
-
-//   // Neutral colors
-//   neutral: {
-//     100: "#E0E0E0",
-//     200: "#D0D0D0",
-//     300: "#B0B0B0",
-//     400: "#909090",
-//     500: "#707070",
-//     600: "#505050",
-//     700: "#303030",
-//     800: "#202020",
-//     900: "#101010",
-//   },
-
-//   // Special colors for relationship features
-//   relationship: {
-//     romantic: "#FF4081",
-//     platonic: "#7C4DFF",
-//     professional: "#00BCD4",
-//   },
-//   overlay: "rgba(0, 0, 0, 0.5)",
-//   border: "#E0E0E0",
-// };

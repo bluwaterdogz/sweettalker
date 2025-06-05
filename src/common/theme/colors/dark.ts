@@ -1,50 +1,4 @@
-import { ThemeColors } from "../types";
-
-// export const darkPalette: ThemeColors = {
-//   background: {
-//     primary: "#181A20",
-//     secondary: "#23262F",
-//     tertiary: "#30343D",
-//   },
-
-//   text: {
-//     primary: "#FFFFFF",
-//     secondary: "#B0B0B0",
-//     tertiary: "#EDF2F4",
-//   },
-//   success: {
-//     primary: "#4CAF50",
-//     secondary: "#81C784",
-//     tertiary: "#388E3C",
-//   },
-//   error: {
-//     primary: "#F44336",
-//     secondary: "#E57373",
-//     tertiary: "#D32F2F",
-//   },
-//   accent: {
-//     primary: "#159FA6",
-//     secondary: "#00A5C4",
-//     tertiary: "#005A6B",
-//   },
-//   secondaryAccent: {
-//     primary: "#FF6B35", // Warm vivid orange — creates emotional and visual contrast
-//     secondary: "#FF8C61", // Softer coral tone
-//     tertiary: "#CC5228", // Muted burnt orange for darker UI components
-//   },
-//   neutral: {
-//     "100": "#30343D",
-//     "200": "#3A3F4B",
-//     "300": "#505463",
-//     "400": "#707484",
-//     "500": "#9094A5",
-//     "600": "#B0B4C5",
-//     "700": "#D0D4E5",
-//     "800": "#E0E4F5",
-//     "900": "#F5F6FA",
-//   },
-//   listItemColors: ["#007991"],
-// };
+import { ThemeColors } from "../../../../../common/src/types/theme/types";
 
 export const darkPalette: ThemeColors = {
   background: {
@@ -55,7 +9,7 @@ export const darkPalette: ThemeColors = {
   text: {
     primary: "#E8E0D5", // Warm light beige (used in heading and body)
     secondary: "#B8B0A5", // Slightly muted beige
-    tertiary: "#7A746B", // Dimmer beige for hints/metadata
+    tertiary: "#181A20", // Dimmer beige for hints/metadata
   },
   success: {
     primary: "#2ECC71", // Strong green (matches modern success conventions)
@@ -77,6 +31,11 @@ export const darkPalette: ThemeColors = {
     secondary: "#FFA180", // Peachy highlight — energetic and warm
     tertiary: "#C04A1E", // Deep terracotta for grounding
   },
+  shadow: {
+    primary: "#B8B0A5",
+    secondary: "#B8B0A5",
+    tertiary: "#B8B0A5",
+  },
   neutral: {
     "100": "#1A1D21",
     "200": "#23262B",
@@ -88,5 +47,39 @@ export const darkPalette: ThemeColors = {
     "800": "#9B9EA6",
     "900": "#C9CCD2",
   },
-  listItemColors: ["#0E1012", "#141618", "#1A1D21"],
+  listItemColors: [
+    "#F5F0EA", // lightest ivory
+    "#F2ECE3", // ivory fog
+    "#EFE8DD", // pale linen
+    "#ECE4D8", // bleached oat
+    "#E8E0D5", // original – warm bone-cream
+    "#E5DCD0", // warm almond
+    "#E2D8CB", // soft clay
+    "#DFD4C6", // antique porcelain
+    "#DCD0C1", // dusty taupe
+    "#D9CCBC", // soft adobe
+    "#D6C8B7", // warm ash beige
+    "#D3C4B2", // muted sand
+    "#D0C0AD", // weathered tan
+    "#CDBCA8", // warm khaki
+    "#CAB8A3", // faded butterscotch
+    "#C7B49E", // soft mocha
+    "#C4B099", // aged parchment
+    "#C1AC94", // dusty fawn
+    "#BEA88F", // creamy stone
+    "#BBA48A", // desert clay
+    "#B8A085", // warm bronze
+    "#B59C80", // antique brass
+    "#B2987B", // warm copper
+    "#AF9476", // antique gold
+    "#AC9071", // warm gold
+    "#A98C6C", // warm gold
+    "#A68867", // warm gold
+    "#A38462", // warm gold
+    "#A0805D", // warm gold
+    "#9D7C58", // warm gold
+    "#9A7853", // warm gold
+    "#97744E", // warm gold
+    "#947049", // warm gold
+  ],
 };

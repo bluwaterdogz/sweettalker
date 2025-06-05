@@ -1,25 +1,18 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { RegisterCredentials, RegisterResponse } from "../api/models";
-
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { mapFirebaseUser } from "../api/mappers";
-import { auth } from "@/firebase";
 import { ThunkAPI } from "@/store/types";
 import { serializeError } from "@/services/base/errors/utils/serializeError";
 
-export const login = createAsyncThunk(
+export const login = createAsyncThunk<
+  { user: any },
+  { email: string; password: string },
+  ThunkAPI
+>(
   "auth/login",
-  async (
-    { email, password }: { email: string; password: string },
-    { rejectWithValue }
-  ) => {
+  async ({ email, password }, { rejectWithValue, extra: { services } }) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      return mapFirebaseUser(userCredential.user);
+      const response = await services.authService.login({ email, password });
+      return response;
     } catch (error) {
       return rejectWithValue(serializeError(error));
     }
@@ -45,6 +38,13 @@ export const register = createAsyncThunk<
   }
 );
 
-export const logout = createAsyncThunk("firebase-auth/logout", async () => {
-  await signOut(auth);
-});
+export const logout = createAsyncThunk<void, void, ThunkAPI>(
+  "auth/logout",
+  async (_, { rejectWithValue, extra: { services } }) => {
+    try {
+      await services.authService.logout();
+    } catch (error) {
+      return rejectWithValue(serializeError(error));
+    }
+  }
+);

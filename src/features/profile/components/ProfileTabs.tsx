@@ -1,9 +1,9 @@
-import { TranslationList } from "@/features/translation/components/TranslationList";
 import { ProfileSettings } from "./ProfileSettings";
 import { Tabs } from "@/common/components";
-import { ReframingList } from "@/features/reframing/components/ReframingList";
-import { useTranslation } from "react-i18next";
-import { StyleSheet } from "react-native";
+import { useTranslation } from "@/i18n/hooks/useTranslation";
+import { StyleSheet, Text } from "react-native";
+import { HistoryTab } from "./ProfileHistoryTab";
+import { ScrollContainer } from "@/common/components/ScrollContainer";
 
 export const ProfileTabs = () => {
   const { t } = useTranslation();
@@ -17,14 +17,9 @@ export const ProfileTabs = () => {
           content: <ProfileSettings />,
         },
         {
-          id: "Translations",
-          label: t("profile.translation"),
-          content: <TranslationList />,
-        },
-        {
-          id: "Reframings",
-          label: t("profile.reframing"),
-          content: <ReframingList />,
+          id: "History",
+          label: t("profile.history"),
+          content: <HistoryTab />,
         },
       ]}
     />

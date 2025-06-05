@@ -1,43 +1,22 @@
-import { FirebaseService } from "@/services/firebase/data/service";
+import { FirebaseService } from "@/services/firebase/data/FirebaseService";
 import { FirestoreCollections } from "@/services/firebase/collections";
-import { Settings } from "./models";
-import { SettingsMapper } from "./mappers";
-import { withErrorHandling } from "@/services/base/errors/utils/withErrorHandling";
 import { AuthService } from "@/features/auth/api/service";
-import { BaseService } from "@/features/common/api/service";
+import { BaseUserServiceCustomId } from "@/services/base/BaseUserServiceCustomId";
+import { Settings, SettingsMapper } from "@common/models/profile/settings";
 
-export class ProfileService extends BaseService<Settings, any> {
+export class ProfileService extends BaseUserServiceCustomId<Settings> {
+  protected firestoreTag: FirestoreCollections.SETTINGS =
+    FirestoreCollections.SETTINGS;
+  protected mapper = SettingsMapper.map;
+
   constructor(
-    protected firebaseService: FirebaseService,
-    private authService: AuthService
+    protected readonly firebaseService: FirebaseService,
+    protected readonly authService: AuthService
   ) {
-    super(
-      {
-        firestoreTag: FirestoreCollections.SETTINGS,
-        mapper: SettingsMapper.map,
-      },
-      firebaseService
-    );
+    super(firebaseService, authService);
   }
 
-  public async get(): Promise<Settings> {
-    const userId = this.authService.getCurrentUser()?.uid;
-    const data = await this.firebaseService.getUserDocument(
-      userId,
-      this.config.firestoreTag
-    );
-    return this.config.mapper(data);
-  }
-
-  @withErrorHandling({
-    errorMessage: "Error updating",
-  })
-  public async updateSettings(data: Partial<Settings>): Promise<void> {
-    const userId = this.authService.getCurrentUser()?.uid;
-    await this.firebaseService.updateOrCreateUserDocument(
-      this.config.firestoreTag,
-      userId,
-      data
-    );
+  getId() {
+    return this.authService.getCurrentUser()?.uid;
   }
 }
