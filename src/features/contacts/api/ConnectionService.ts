@@ -1,4 +1,3 @@
-import { BaseService } from "@/services/base/BaseService";
 import { FirestoreCollections } from "@/services/firebase/collections";
 import { FirebaseService } from "@/services/firebase/data/FirebaseService";
 import {
@@ -7,11 +6,27 @@ import {
 } from "@common/models/contacts/connection";
 import { QueryOptions } from "@/services/firebase/data/query";
 import { auth } from "@/app/firebase";
+import { BaseCustomIdService } from "@/services/base/BaseCustomIdService";
+import { BaseServiceOptions } from "@/services/base/BaseService";
 
-export class ConnectionService extends BaseService<Connection> {
+interface ConnectionKeyOptions {
+  id1: string;
+  id2: string;
+}
+
+export class ConnectionService extends BaseCustomIdService<
+  Connection,
+  any,
+  BaseServiceOptions & ConnectionKeyOptions
+> {
   protected firestoreTag: FirestoreCollections.USER_CONNECTIONS =
     FirestoreCollections.USER_CONNECTIONS;
+
   protected mapper = ConnectionMapper.map;
+
+  protected getId({ id1, id2 }: ConnectionKeyOptions) {
+    return [id1, id2].sort().join("_");
+  }
 
   protected getDefaultListQueryOptions(): QueryOptions {
     const userId = auth.currentUser?.uid;
@@ -27,21 +42,21 @@ export class ConnectionService extends BaseService<Connection> {
           operator: "array-contains",
           value: userId,
         },
-        {
-          operator: "OR",
-          conditions: [
-            {
-              field: "receiverId",
-              operator: "!=",
-              value: userId,
-            },
-            {
-              field: "status",
-              operator: "in",
-              value: ["pending", "accepted"],
-            },
-          ],
-        },
+        // {
+        //   operator: "OR",
+        //   conditions: [
+        //     {
+        //       field: "receiverId",
+        //       operator: "!=",
+        //       value: userId,
+        //     },
+        //     {
+        //       field: "status",
+        //       operator: "in",
+        //       value: ["pending", "accepted"],
+        //     },
+        //   ],
+        // },
       ],
     };
   }

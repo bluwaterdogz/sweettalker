@@ -1,42 +1,74 @@
 import React, { useMemo } from "react";
-import { View, StyleSheet, FlatList, StyleProp, ViewStyle } from "react-native";
-import { ListControls } from "../ListControls";
-import { EmptyStateMessage } from "../EmptyStateMessage";
-import Fuse from "fuse.js";
-import { Loader } from "../Loader";
+import { View, StyleSheet, StyleProp, ViewStyle } from "react-native";
+import { List } from "@/common/components/List";
+import { ListControls } from "@/common/components/ListControls";
 import { useControllableState } from "@/common/hooks/useControllableState";
+import Fuse from "fuse.js";
 
 export interface SearchableListProps<T> {
   data: T[];
   renderItem: (item: T) => React.ReactNode;
+  keyExtractor?: (item: T, index: number) => string;
   searchKeys?: (keyof T)[];
-  emptyListContent?: React.ReactNode;
-  cardStyles?: StyleProp<ViewStyle>;
-  style?: StyleProp<ViewStyle>;
-  loading?: boolean;
-  showFavorites?: boolean;
   showSearch?: boolean;
   useInternalSearchFilter?: boolean;
+  showFavorites?: boolean;
   onFavoriteToggle?: (showFavorites: boolean) => void;
   disabled?: boolean;
   searchValue?: string;
   setSearchValue?: (value: string) => void;
+  style?: StyleProp<ViewStyle>;
+  contentContainerStyle?: ViewStyle;
+  loading?: boolean;
+  empty?: boolean;
+  emptyComponent?: React.ReactNode;
+  loadingComponent?: React.ReactNode;
+  refreshing?: boolean;
+  onRefresh?: () => void;
+  scrollToBottom?: boolean;
+  fadeTop?: boolean;
+  fadeBottom?: boolean;
+  fadeSize?: number;
+  onEndReached?: () => void;
+  onEndReachedThreshold?: number;
+  itemSeparatorStyle?: ViewStyle;
+  showItemSeparator?: boolean;
+  ListHeaderComponent?: React.ReactNode;
+  ListFooterComponent?: React.ReactNode;
+  ItemSeparatorComponent?: React.ComponentType<any> | null;
 }
 
 export const SearchableList = <T extends { id: string }>({
   data,
   renderItem,
+  keyExtractor,
   searchKeys = [],
-  emptyListContent,
-  loading = false,
-  showFavorites = false,
   showSearch = true,
   useInternalSearchFilter = true,
+  showFavorites = false,
   onFavoriteToggle,
-  style,
   disabled = false,
   searchValue,
   setSearchValue,
+  style,
+  contentContainerStyle,
+  loading,
+  empty,
+  emptyComponent,
+  loadingComponent,
+  refreshing,
+  onRefresh,
+  scrollToBottom,
+  fadeTop,
+  fadeBottom,
+  fadeSize,
+  onEndReached,
+  onEndReachedThreshold,
+  itemSeparatorStyle,
+  showItemSeparator,
+  ListHeaderComponent,
+  ListFooterComponent,
+  ItemSeparatorComponent,
 }: SearchableListProps<T>) => {
   const [search, setSearch] = useControllableState({
     value: searchValue,
@@ -57,39 +89,43 @@ export const SearchableList = <T extends { id: string }>({
   const filteredData = useMemo(() => {
     if (!search || !useInternalSearchFilter) return data;
     return fuse.search(search).map((result) => result.item);
-  }, [data, search, fuse]);
+  }, [data, search, fuse, useInternalSearchFilter]);
 
   return (
     <View style={[styles.container, style]}>
-      {loading ? (
-        <Loader />
-      ) : (
-        <>
-          {showSearch && (
-            <ListControls
-              style={{ padding: 16 }}
-              search={search}
-              setSearch={setSearch}
-              showOnlyFavorites={showFavorites}
-              setShowOnlyFavorites={onFavoriteToggle}
-              disabled={disabled}
-            />
-          )}
-          {data.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              {emptyListContent ?? <EmptyStateMessage />}
-            </View>
-          ) : (
-            <FlatList
-              data={filteredData}
-              renderItem={({ item }) => <>{renderItem(item)}</>}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.list}
-              showsVerticalScrollIndicator={false}
-            />
-          )}
-        </>
+      {showSearch && (
+        <ListControls
+          style={styles.controls}
+          search={search}
+          setSearch={setSearch}
+          showOnlyFavorites={showFavorites}
+          setShowOnlyFavorites={onFavoriteToggle}
+          disabled={disabled}
+        />
       )}
+      <List
+        data={filteredData}
+        renderItem={(item: T) => renderItem(item)}
+        keyExtractor={keyExtractor}
+        contentContainerStyle={contentContainerStyle}
+        loading={loading}
+        empty={empty}
+        emptyComponent={emptyComponent}
+        loadingComponent={loadingComponent}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        scrollToBottom={scrollToBottom}
+        fadeTop={fadeTop}
+        fadeBottom={fadeBottom}
+        fadeSize={fadeSize}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={onEndReachedThreshold}
+        itemSeparatorStyle={itemSeparatorStyle}
+        showItemSeparator={showItemSeparator}
+        ListHeaderComponent={ListHeaderComponent}
+        ListFooterComponent={ListFooterComponent}
+        ItemSeparatorComponent={ItemSeparatorComponent}
+      />
     </View>
   );
 };
@@ -98,18 +134,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-
+  controls: {
+    padding: 16,
+  },
   list: {
-    // padding: 16,
     gap: 8,
-  },
-  card: {
-    marginBottom: 8,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
   },
 });

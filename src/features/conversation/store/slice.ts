@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Conversation } from "@common/models/chat";
+import { Conversation } from "@common/models/conversation";
 import {
   deleteConversation,
   addConversation,

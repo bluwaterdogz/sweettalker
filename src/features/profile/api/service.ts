@@ -1,10 +1,10 @@
 import { FirebaseService } from "@/services/firebase/data/FirebaseService";
 import { FirestoreCollections } from "@/services/firebase/collections";
 import { AuthService } from "@/features/auth/api/service";
-import { BaseUserServiceCustomId } from "@/services/base/BaseUserServiceCustomId";
+import { BaseUserCustomIdService } from "@/services/base/BaseUserCustomIdService";
 import { Settings, SettingsMapper } from "@common/models/profile/settings";
 
-export class ProfileService extends BaseUserServiceCustomId<Settings> {
+export class ProfileService extends BaseUserCustomIdService<Settings> {
   protected firestoreTag: FirestoreCollections.SETTINGS =
     FirestoreCollections.SETTINGS;
   protected mapper = SettingsMapper.map;

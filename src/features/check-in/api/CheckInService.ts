@@ -2,9 +2,9 @@ import { CheckIn, CheckInMapper } from "@common/models/check-in/check-in";
 import { FirestoreCollections } from "@/services/firebase/collections";
 import { FirebaseService } from "@/services/firebase/data/FirebaseService";
 import { AuthService } from "@/features/auth/api/service";
-import { BaseUserServiceCustomId } from "@/services/base/BaseUserServiceCustomId";
+import { BaseUserCustomIdService } from "@/services/base/BaseUserCustomIdService";
 
-export class CheckInService extends BaseUserServiceCustomId<CheckIn, CheckIn> {
+export class CheckInService extends BaseUserCustomIdService<CheckIn, CheckIn> {
   protected firestoreTag: FirestoreCollections.CHECK_INS =
     FirestoreCollections.CHECK_INS;
   protected mapper = CheckInMapper.map;

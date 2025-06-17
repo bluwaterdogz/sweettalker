@@ -1,7 +1,7 @@
 import { useUser } from "@/features/auth/hooks/useUser";
 import { Connection } from "@common/models/contacts/connection";
 import { Contact } from "@common/models/contacts/contact";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 interface UseConnectionsMapProps {
   connections: Connection[];
   users: Contact[];
@@ -31,9 +31,13 @@ export const useMapConnectionsToContacts = ({
       ) || {}
     );
   }, [connections]);
-  const getConnection = (userIds: string[]) => {
-    return connectionMap[connectionMapKey(userIds)];
-  };
+
+  const getConnection = useCallback(
+    (userIds: string[]) => {
+      return connectionMap[connectionMapKey(userIds)];
+    },
+    [connectionMap]
+  );
 
   const contactsWithConnections = useMemo(() => {
     return users

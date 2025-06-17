@@ -7,7 +7,7 @@ import { useAppDispatch } from "@/store";
 import { useUser } from "@/features/auth/hooks/useUser";
 import { useServices } from "@/services/context";
 import { addConversation } from "@/features/conversation/store/thunks";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ContactItem } from "../components/ContactItem";
 import { PageHeader } from "../../../app/layout/PageHeader";
 import { useSubscribeFirestore } from "@/services/firebase/hooks/useSubscribeFirestore";
@@ -38,14 +38,7 @@ export const ContactListScreen = ({}: {
   } = useSubscribeFirestore<Connection[]>((onData, onError) =>
     connectionService.subscribe(onData, onError, {
       query: {
-        where: [
-          { field: "status", operator: "in", value: ["accepted"] },
-          {
-            field: "userIds",
-            operator: "array-contains",
-            value: user?.uid,
-          },
-        ],
+        where: [{ field: "status", operator: "==", value: "accepted" }],
       },
     })
   );
@@ -57,7 +50,10 @@ export const ContactListScreen = ({}: {
           where: optionalWhereIn(connections.map((c) => c.userIds).flat()),
         },
       }),
-    { enabled: hasFetchedConnections && connections.length > 0 }
+    {
+      enabled: hasFetchedConnections && connections.length > 0,
+      deps: [connections],
+    }
   );
 
   const { contactsWithConnections } = useMapConnectionsToContacts({
@@ -70,11 +66,7 @@ export const ContactListScreen = ({}: {
       let conversationId = await conversationService.getConversationId(
         contact.id
       );
-      if (conversationId) {
-        navigation.navigate("Conversation", {
-          conversationId: conversationId,
-        });
-      } else {
+      if (!conversationId) {
         await dispatch(
           addConversation({
             userIds: [user?.uid!, contact.id],
@@ -83,23 +75,21 @@ export const ContactListScreen = ({}: {
         conversationId = await conversationService.getConversationId(
           contact.id
         );
+      }
+      if (conversationId) {
         navigation.navigate("Conversation", {
           conversationId: conversationId,
         });
+      } else {
+        console.error("Conversation not created");
       }
     },
-    [dispatch, navigation, conversationService, user?.uid]
+    [dispatch, navigation, user?.uid, conversationService]
   );
 
   const toggleActiveUser = useCallback(
     (contact: ContactWithConnection) => {
       setActiveUser([contact]);
-      // setActiveUser((prev) => {
-      //   if (prev.includes(contact.id)) {
-      //     return prev.filter((id) => id !== contact.id);
-      //   }
-      //   return [...prev, contact.id];
-      // });
     },
     [setActiveUser]
   );

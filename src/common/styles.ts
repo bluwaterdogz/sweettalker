@@ -44,7 +44,7 @@ export const common = StyleSheet.create({
     borderRadius: 16,
   },
   controls: {
-    minHeight: 40,
+    minHeight: 38,
   },
 });
 

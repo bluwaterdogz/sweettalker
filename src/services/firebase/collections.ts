@@ -13,4 +13,7 @@ export enum FirestoreCollections {
   CONVERSATIONS = "conversations",
   MESSAGES = "messages",
   USER_CONNECTIONS = "user_connections",
+  CONVERSATION_USER_DETAILS = "conversation_user_details",
+  USER_PRIVATE_CONVERSATION_DETAILS = "user_private_conversation_details",
+  BLOCKED_USERS = "blocked_users",
 }

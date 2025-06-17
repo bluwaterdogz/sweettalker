@@ -1,15 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, Image, Pressable } from "react-native";
-import { Icon } from "@/common/components";
+import { Button, Icon } from "@/common/components";
 import { faCommentDots } from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from "@/common/theme/hooks/useTheme";
-import { useNavigation } from "@react-navigation/native";
 import { useServices } from "@/services/context";
-import { Timestamp } from "firebase/firestore";
-import { v4 as uuidv4 } from "uuid";
 import { Contact } from "@common/models/contacts/contact";
 import { useAppDispatch } from "@/store";
 import { useAppRoute } from "@/app/navigation/hooks/useAppRoute";
+import { addConversation } from "@/features/conversation/store/thunks";
+import { useUser } from "@/features/auth/hooks/useUser";
+import { useAppNavigation } from "@/app/navigation/hooks/useAppNavigation";
+import { Avatar } from "@/common/components/Avatar";
+import { useThemeBorders } from "@/common/hooks/useThemeBorders";
 
 export const ContactDetailScreen = ({
   conversations = [],
@@ -20,12 +22,13 @@ export const ContactDetailScreen = ({
 }) => {
   const [contact, setContact] = useState<Contact | undefined>(undefined);
   const { colors } = useTheme();
-  const navigation = useNavigation();
+  const navigation = useAppNavigation();
   const route = useAppRoute<"ContactDetail">();
   const { contactId } = route.params;
+  const { user } = useUser();
   const { contactService, conversationService } = useServices();
   const dispatch = useAppDispatch();
-
+  const avatarStyle = useThemeBorders();
   useEffect(() => {
     const loadContact = async () => {
       const loadedContact = await contactService.get(contactId);
@@ -51,30 +54,31 @@ export const ContactDetailScreen = ({
     );
   };
 
-  const handleChatPress = async () => {
-    if (!contact) return;
-
-    const existing = findConversationWithContact(contact.id);
-    if (existing) {
-      (navigation as any).navigate("Conversation", {
-        conversationId: existing.id,
-      });
-    } else {
-      const newId = uuidv4();
-      const conversation = {
-        id: newId,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-        createdBy: currentUserId,
-        updatedBy: currentUserId,
-        userIds: [currentUserId, contact.id],
-        options: { color: colors.listItemColors[0] },
-        readReceipts: {},
-      };
-      await conversationService.create(conversation);
-      (navigation as any).navigate("Conversation", { conversationId: newId });
-    }
-  };
+  const goToChat = useCallback(
+    async (contact: Contact) => {
+      let conversationId = await conversationService.getConversationId(
+        contact.id
+      );
+      if (!conversationId) {
+        await dispatch(
+          addConversation({
+            userIds: [user?.uid!, contact.id],
+          })
+        );
+        conversationId = await conversationService.getConversationId(
+          contact.id
+        );
+      }
+      if (conversationId) {
+        navigation.navigate("Conversation", {
+          conversationId: conversationId,
+        });
+      } else {
+        console.error("Conversation not created");
+      }
+    },
+    [dispatch, navigation, user?.uid, conversationService]
+  );
 
   const handleSave = async () => {
     if (!contact) return;
@@ -106,7 +110,11 @@ export const ContactDetailScreen = ({
     <View
       style={[styles.container, { backgroundColor: colors.background.primary }]}
     >
-      <Image source={{ uri: contact.photoURL }} style={styles.avatar} />
+      <Avatar
+        size={220}
+        photoURL={contact.photoURL!}
+        style={[styles.avatar, avatarStyle]}
+      />
       <Text style={[styles.name, { color: colors.text.primary }]}>
         {contact.displayName}
       </Text>
@@ -194,29 +202,12 @@ export const ContactDetailScreen = ({
         placeholderTextColor={colors.neutral[400]}
       />
        */}
-      <Pressable
-        style={[styles.chatButton, { backgroundColor: colors.accent.primary }]}
-        onPress={handleChatPress}
-      >
-        <Icon
-          icon={faCommentDots}
-          color={colors.background.primary}
-          size={20}
-        />
-        <Text
-          style={[styles.chatButtonText, { color: colors.background.primary }]}
-        >
+      <Button onPress={() => goToChat(contact)}>
+        <Icon icon={faCommentDots} color={colors.text.primary} size={20} />
+        <Text style={[styles.chatButtonText, { color: colors.text.primary }]}>
           Start Chat
         </Text>
-      </Pressable>
-      <Pressable
-        style={[styles.saveButton, { backgroundColor: colors.neutral[100] }]}
-        onPress={handleSave}
-      >
-        <Text style={[styles.saveButtonText, { color: colors.neutral[400] }]}>
-          Save
-        </Text>
-      </Pressable>
+      </Button>
     </View>
   );
 };
@@ -225,9 +216,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    paddingTop: 48,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
   },
-  avatar: { width: 120, height: 120, borderRadius: 60, marginBottom: 16 },
+  avatar: {
+    borderRadius: 60,
+    marginBottom: 16,
+  },
   name: { fontSize: 28, fontWeight: "bold", marginBottom: 6 },
   chatButton: {
     flexDirection: "row",

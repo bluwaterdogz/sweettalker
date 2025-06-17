@@ -10,7 +10,7 @@ import { Button } from "@/common/components/Button";
 
 import { checkIn } from "../store/thunks";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { useThemeBorders } from "@/features/interpretation/hooks/useThemeBorders";
+import { useThemeBorders } from "@/common/hooks/useThemeBorders";
 import { useNavigation } from "@react-navigation/native";
 
 export const CheckInScreen = () => {

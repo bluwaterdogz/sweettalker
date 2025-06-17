@@ -17,9 +17,9 @@ import { useAppNavigation } from "@/app/navigation/hooks/useAppNavigation";
 
 export const ContactSearchScreen = () => {
   const { colors } = useTheme();
-  const { user } = useUser();
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
+  const { user } = useUser();
   const { contactService, connectionService } = useServices();
   const navigation = useAppNavigation();
 
@@ -35,18 +35,7 @@ export const ContactSearchScreen = () => {
 
   // Subscribe to connections
   const { result: connections = [] } = useSubscribeFirestore<Connection[]>(
-    (onData, onError) =>
-      connectionService.subscribe(onData, onError, {
-        query: {
-          where: [
-            {
-              field: "userIds",
-              operator: "array-contains",
-              value: user?.uid || "",
-            },
-          ],
-        },
-      })
+    (onData, onError) => connectionService.subscribe(onData, onError)
   );
 
   const { contactsWithConnections } = useMapConnectionsToContacts({

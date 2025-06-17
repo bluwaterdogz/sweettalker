@@ -2,16 +2,16 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useTheme } from "@/common/theme/hooks/useTheme";
 import { Card } from "@/common/components";
-import { Conversation } from "@common/models/chat";
+import { Conversation } from "@common/models/conversation";
 import { MultiAvatar } from "@/common/components/MultiAvatar/MultiAvatar";
 
-import { useThemeBorders } from "@/features/interpretation/hooks/useThemeBorders";
+import { useThemeBorders } from "@/common/hooks/useThemeBorders";
 import { TruncatedText } from "@/common/components/TruncatedText";
 import { Contact } from "@common/models/contacts/contact";
-import { useUser } from "@/features/auth/hooks/useUser";
+import { UserPrivateConversationDetails } from "@common/models/conversation/user_private_conversation_details";
 
 interface ConversationItemProps {
-  conversation: Conversation;
+  conversation: Conversation & Partial<UserPrivateConversationDetails>;
   onPress: (id: string) => void;
   currentUserId?: string;
   users: Contact[];
@@ -23,7 +23,6 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   users,
 }) => {
   const { colors } = useTheme();
-  const { user } = useUser();
   const avatarStyle = useThemeBorders();
   return (
     <Card
@@ -35,8 +34,12 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
         <View style={styles.avatarContainer}>
           <MultiAvatar
             users={users}
+            size={45}
             avatarStyle={avatarStyle}
-            badgeNumber={conversation.unreadCounts[user!.uid]}
+            badgeNumber={
+              conversation.numMessages -
+              (conversation.readCount || conversation.numMessages)
+            }
           />
         </View>
         <View style={styles.content}>
@@ -75,8 +78,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   avatarContainer: {
-    flexDirection: "row",
+    display: "flex",
+    flexDirection: "column",
     alignItems: "center",
+    justifyContent: "center",
+    paddingRight: 16,
   },
   content: {
     flexDirection: "column",

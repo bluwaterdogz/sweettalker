@@ -1,46 +1,93 @@
 import { useTheme } from "@/common/theme/hooks/useTheme";
-import { ResponseSuggestion } from "@common/models/chat/response-suggestion";
-import { FlatList, View, Text, Pressable, StyleSheet } from "react-native";
+import { ResponseSuggestion } from "@common/models/conversation/response-suggestion";
+import { View, Text, Pressable, StyleSheet, FlatList } from "react-native";
+import { Button, Icon, Loader } from "@/common/components";
+import { ResponseSuggestionItem } from "./ResponseSuggestionItem";
+import { common } from "@/common/styles";
+import { faRecycle } from "@fortawesome/free-solid-svg-icons";
+import { usePromise } from "@/common/hooks/usePromise";
+import { useUser } from "@/features/auth/hooks/useUser";
+import { useServices } from "@/services/context";
+import { Message } from "@common/models/conversation";
 
 interface ResponseSuggestionDisplayProps {
-  responseSuggestions: ResponseSuggestion[];
+  messages: Message[];
   onSelectResponseSuggestion: (responseSuggestion: ResponseSuggestion) => void;
+  onClose: () => void;
 }
 export const ResponseSuggestionDisplay = ({
-  responseSuggestions,
+  messages,
   onSelectResponseSuggestion,
+  onClose,
 }: ResponseSuggestionDisplayProps) => {
-  const { colors, typography } = useTheme();
+  const { user } = useUser();
+  const { typography, colors } = useTheme();
+  const { translationService } = useServices();
+
+  const {
+    data: responseSuggestions,
+    isLoading,
+    error,
+    refresh,
+  } = usePromise<ResponseSuggestion[]>(async () => {
+    return await translationService.getResponseSuggestions(
+      messages,
+      user!.uid,
+      {}
+    );
+  });
+
   return (
-    <FlatList
-      data={responseSuggestions}
-      renderItem={({ item }) => (
-        <View key={item.text} style={styles.responseSuggestionContainer}>
-          <Pressable
-            style={[
-              styles.responseSuggestion,
-              { borderColor: colors.text.primary },
-            ]}
-            onPress={() => onSelectResponseSuggestion(item)}
-          >
-            <Text style={typography.bodyMedium}>{item.text}</Text>
-          </Pressable>
-          <Text style={typography.bodySmall}>{item.description}</Text>
-        </View>
-      )}
-    />
+    <View>
+      <Text
+        style={[
+          typography.headingMedium,
+          {
+            color: colors.text.primary,
+          },
+        ]}
+      >
+        Response Suggestions
+      </Text>
+      <View style={styles.list}>
+        {isLoading ? (
+          <View style={common.row}>
+            <Loader />
+          </View>
+        ) : (
+          responseSuggestions
+            ?.sort((x) => x.score)
+            .reverse()
+            .map((item) => (
+              <ResponseSuggestionItem
+                item={item}
+                key={item.text}
+                onSelectResponseSuggestion={onSelectResponseSuggestion}
+              />
+            ))
+        )}
+      </View>
+      <View style={common.row}>
+        {onClose != null && (
+          <Button variant="outline" title="Close" onPress={onClose} />
+        )}
+        {refresh != null && (
+          <Button
+            variant="outline"
+            title={
+              <Icon icon={faRecycle} size={18} color={colors.text.secondary} />
+            }
+            onPress={refresh}
+          />
+        )}
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  responseSuggestion: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 8,
-    justifyContent: "flex-start",
-    marginBottom: 8,
-  },
-  responseSuggestionContainer: {
-    marginBottom: 16,
+  list: {
+    paddingVertical: 8,
+    // gap: 16,
   },
 });

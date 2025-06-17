@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ViewStyle,
   ImageStyle,
+  Pressable,
 } from "react-native";
 import { useTheme } from "@/common/theme/hooks/useTheme";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
@@ -20,6 +21,7 @@ interface MultiAvatarProps {
   size?: number;
   avatarStyle?: ViewStyle;
   badgeNumber?: number;
+  onUserPress?: (user: Contact) => void;
 }
 
 export const MultiAvatar: React.FC<MultiAvatarProps> = ({
@@ -27,6 +29,7 @@ export const MultiAvatar: React.FC<MultiAvatarProps> = ({
   size = 48,
   avatarStyle,
   badgeNumber,
+  onUserPress,
 }) => {
   const { colors } = useTheme();
   if (!users || users.length === 0) return null;
@@ -34,6 +37,7 @@ export const MultiAvatar: React.FC<MultiAvatarProps> = ({
   let extraCount = 0;
   // Pick avatars to show
   let avatars: Contact[] = [];
+
   if (users.length <= 3) {
     avatars = users;
   } else {
@@ -43,12 +47,12 @@ export const MultiAvatar: React.FC<MultiAvatarProps> = ({
     extraCount = users.length - 3;
   }
   // Overlap offsets
-  const overlap = size * 0.4;
+  const overlap = size * 0.34;
   return (
     <View style={{ ...styles.container, height: size }}>
       {avatars.map((user, idx) => {
         let viewStyle: ViewStyle = {
-          left: idx === 1 ? size * 0.3 : idx * 22,
+          left: idx === 1 ? size * 0.3 : idx * 17,
           zIndex: idx === 1 ? 10 : 5,
           width: idx === 1 ? size : size * 0.7,
           height: idx === 1 ? size : size * 0.7,
@@ -62,15 +66,14 @@ export const MultiAvatar: React.FC<MultiAvatarProps> = ({
 
         if (avatars.length === 1) {
           viewStyle = {
-            left: size * 0.05,
+            left: 0,
             zIndex: 10,
-            position: "absolute",
             transformOrigin: "center",
           };
           imageStyle = {
-            width: size * 1.5,
-            height: size * 1.5,
-            borderRadius: (size * 1.5) / 2,
+            width: size,
+            height: size,
+            borderRadius: size / 2,
           };
         }
 
@@ -79,9 +82,10 @@ export const MultiAvatar: React.FC<MultiAvatarProps> = ({
           : getColorFromHash(user.id, colors.listItemColors);
 
         return (
-          <View
+          <Pressable
             key={`${user.id} ${idx}`}
-            style={[styles.avatarWrapper, viewStyle, avatarStyle]}
+            style={[styles.avatarWrapper, viewStyle]}
+            onPress={() => onUserPress?.(user)}
           >
             {user.photoURL ? (
               <Image
@@ -103,30 +107,33 @@ export const MultiAvatar: React.FC<MultiAvatarProps> = ({
                   borderColor: colors.background.primary,
                   backgroundColor,
                   ...imageStyle,
+                  ...avatarStyle,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
                 <FontAwesomeIcon
                   icon={faUser}
-                  size={size * 0.6}
+                  size={size * 0.5}
                   color={colors.text.primary}
                 />
               </View>
             )}
-          </View>
+          </Pressable>
         );
       })}
       {badgeNumber != null && badgeNumber > 0 && (
-        <CountBadge count={badgeNumber} />
+        <CountBadge count={badgeNumber} top={size * 0.7} left={size * 0.7} />
       )}
-      <View
-        style={{
-          width:
-            size + (avatars.length - 1 + (extraCount > 0 ? 1 : 0)) * overlap,
-          height: size,
-        }}
-      />
+      {users.length > 1 && (
+        <View
+          style={{
+            width:
+              size + (avatars.length - 1 + (extraCount > 0 ? 1 : 0)) * overlap,
+            height: size,
+          }}
+        />
+      )}
     </View>
   );
 };
@@ -134,7 +141,6 @@ export const MultiAvatar: React.FC<MultiAvatarProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    width: 90,
     justifyContent: "center",
     alignItems: "center",
   },

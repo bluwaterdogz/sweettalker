@@ -17,9 +17,14 @@ import {
 import { setModalities, setTone, setFilters } from "../store/slice";
 import { Pill } from "@/common/components/Pill";
 import { useTheme } from "@/common/theme/hooks/useTheme";
-import { InterpretationControls } from "@/features/interpretation/components/InterpretationControls";
-import { ContentDropdown, ListControls } from "@/common/components";
-import { useThemeBorders } from "@/features/interpretation/hooks/useThemeBorders";
+
+import {
+  Button,
+  ContentDropdown,
+  ListControls,
+  TextInput,
+} from "@/common/components";
+import { useThemeBorders } from "@/common/hooks/useThemeBorders";
 
 interface TranslationControlsProps {
   initialMessage?: string;
@@ -32,11 +37,12 @@ export const TranslationControls: React.FC<TranslationControlsProps> = ({
     (state) => state.translation
   );
 
+  const { typography, colors } = useTheme();
+
   const { search = "", showOnlyFavorites = false } = filters;
-  const [inputText, setInputText] = useState(initialMessage);
+  const [input, setInput] = useState(initialMessage);
   const { showToast } = useToast();
   const dispatch = useAppDispatch();
-  const { colors } = useTheme();
   const { t } = useTranslation();
 
   const handleSetSearch = useCallback(
@@ -56,7 +62,7 @@ export const TranslationControls: React.FC<TranslationControlsProps> = ({
     try {
       await dispatch(
         translateText({
-          input: inputText,
+          input,
         })
       );
     } catch (error) {
@@ -65,13 +71,13 @@ export const TranslationControls: React.FC<TranslationControlsProps> = ({
         message: error as string,
       });
     }
-  }, [dispatch, showToast, inputText]);
+  }, [dispatch, showToast, input]);
 
   const mockInput = useCallback(() => {
-    setInputText(
+    setInput(
       mockUserMessages[Math.floor(Math.random() * mockUserMessages.length)]
     );
-  }, [setInputText]);
+  }, [setInput]);
 
   const inputThemeStyles = useThemeBorders();
 
@@ -147,59 +153,68 @@ export const TranslationControls: React.FC<TranslationControlsProps> = ({
   }, [filters, filtersColorMap, dispatch]);
 
   return (
-    <InterpretationControls
-      direction={t("translation.direction")}
-      direction2={t("translation.direction2")}
-      buttonTitle={t("common.translate")}
-      onInterpretation={handleTranslate}
-      loading={status === "loading"}
-      onMock={mockInput}
-      input={inputText}
-      setInput={setInputText}
-    >
-      <ContentDropdown label={t("common.controls")}>
-        <View style={[common.row, styles.controlRow]}>
-          <MultiSelect
-            style={inputThemeStyles}
-            dropdownStyle={inputThemeStyles}
-            options={translationToneOptions}
-            selectedValues={tone ? [tone] : []}
-            onSelectionChange={(itemValue) => dispatch(setTone(itemValue[0]))}
-            placeholder={t("common.selectTone")}
-            mode="single"
-          />
-        </View>
-        <View style={[common.row, styles.controlRow]}>
-          <MultiSelect<Modality>
-            options={Object.values(translationModalities).map((modality) => ({
-              label: modality.label,
-              value: modality,
-            }))}
-            dropdownStyle={inputThemeStyles}
-            style={inputThemeStyles}
-            selectedValues={modalities}
-            placeholder={t("common.selectModalities")}
-            onSelectionChange={(itemValue) =>
-              dispatch(setModalities(itemValue))
-            }
-          />
-        </View>
-        <View style={[common.row, styles.controlRow]}>
-          <ListControls
-            searchStyle={inputThemeStyles}
-            setSearch={handleSetSearch}
-            search={search}
-            setShowOnlyFavorites={handleSetShowOnlyFavorites}
-            showOnlyFavorites={showOnlyFavorites}
-          />
-        </View>
-      </ContentDropdown>
+    <View style={[common.formContainer, styles.container]}>
+      <Text
+        style={[
+          typography.headingLarge,
+          styles.direction,
+          { color: colors.text.primary },
+        ]}
+      >
+        {t("translation.direction")}
+      </Text>
+      <Button
+        title={t("common.translate")}
+        onPress={handleTranslate}
+        style={inputThemeStyles}
+        disabled={!input.trim()}
+        flex={1}
+        loading={status === "loading"}
+      />
+      <View style={common.row}>
+        <TextInput
+          value={input}
+          onChangeText={setInput}
+          placeholder={t("translation.direction2")}
+          style={inputThemeStyles}
+          textAlignVertical="top"
+          multiline={true}
+          clearInput={() => setInput("")}
+        />
+      </View>
+
+      {/* <ContentDropdown label={t("common.controls")}> */}
+      <View style={[common.row, styles.controlRow]}>
+        <MultiSelect
+          style={inputThemeStyles}
+          dropdownStyle={inputThemeStyles}
+          options={translationToneOptions}
+          selectedValues={tone ? [tone] : []}
+          onSelectionChange={(itemValue) => dispatch(setTone(itemValue[0]))}
+          placeholder={t("common.selectTone")}
+          mode="single"
+        />
+        <MultiSelect<Modality>
+          options={Object.values(translationModalities).map((modality) => ({
+            label: modality.label,
+            value: modality,
+          }))}
+          dropdownStyle={inputThemeStyles}
+          style={inputThemeStyles}
+          selectedValues={modalities}
+          placeholder={t("common.selectModalities")}
+          onSelectionChange={(itemValue) => dispatch(setModalities(itemValue))}
+        />
+      </View>
+      {/* </ContentDropdown> */}
       {(tone || modalities.length > 0) && (
         <View style={[common.wrapRow, styles.controlRow]}>
-          <Text style={{ color: colors.text.secondary }}>Options:</Text>
-          {optionPills.map((pill) => (
-            <Pill {...(pill as any)} />
-          ))}
+          <Text style={[{ color: colors.text.secondary }, styles.optionsLabel]}>
+            Options:
+          </Text>
+          {optionPills.map((pill) => {
+            return <Pill {...(pill as any)} key={pill.key} />;
+          })}
         </View>
       )}
       {activeFilters.length > 0 && (
@@ -210,12 +225,25 @@ export const TranslationControls: React.FC<TranslationControlsProps> = ({
           ))}
         </View>
       )}
-    </InterpretationControls>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   controlRow: {
     marginBottom: styleConsts.rowMarginBottom,
+    gap: 8,
+  },
+  direction: {
+    width: "70%",
+    paddingBottom: 16,
+  },
+  container: {
+    paddingHorizontal: 16,
+    paddingBottom: 0,
+    paddingTop: 8,
+  },
+  optionsLabel: {
+    paddingTop: 6,
   },
 });

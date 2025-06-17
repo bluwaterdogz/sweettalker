@@ -1,4 +1,4 @@
-import { Conversation, Message } from "@common/models/chat";
+import { Conversation, Message } from "@common/models/conversation";
 import { Timestamp } from "firebase/firestore";
 import { getRandomUser } from "../auth/mocks";
 import { colors } from "@/common/theme/colors";

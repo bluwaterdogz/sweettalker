@@ -1,5 +1,10 @@
 import React from "react";
-import { TouchableOpacity, StyleSheet, ViewStyle } from "react-native";
+import {
+  TouchableOpacity,
+  StyleSheet,
+  ViewStyle,
+  ActivityIndicator,
+} from "react-native";
 import { useTheme } from "../../theme/hooks/useTheme";
 import { Icon } from "../Icon";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -7,21 +12,25 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 interface CircleButtonProps {
   icon: IconProp;
   onPress: () => void;
+  onLongPress?: () => void;
   size?: number;
   style?: ViewStyle;
   color?: string;
   backgroundColor?: string;
   disabled?: boolean;
+  loading?: boolean;
 }
 
 export const CircleButton: React.FC<CircleButtonProps> = ({
   icon,
   onPress,
-  size = 48,
+  onLongPress,
+  size = 36,
   style,
   color,
   backgroundColor,
   disabled = false,
+  loading = false,
 }) => {
   const { colors } = useTheme();
   return (
@@ -37,14 +46,19 @@ export const CircleButton: React.FC<CircleButtonProps> = ({
         style,
       ]}
       onPress={onPress}
+      onLongPress={onLongPress}
       disabled={disabled}
       activeOpacity={0.7}
     >
-      <Icon
-        icon={icon}
-        size={size * 0.5}
-        color={color || colors.text.primary}
-      />
+      {loading ? (
+        <ActivityIndicator size="small" color={color || colors.text.primary} />
+      ) : (
+        <Icon
+          icon={icon}
+          size={size * 0.5}
+          color={color || colors.text.primary}
+        />
+      )}
     </TouchableOpacity>
   );
 };

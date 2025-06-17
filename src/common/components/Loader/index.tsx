@@ -5,10 +5,21 @@ import { useTheme } from "../../theme/hooks/useTheme";
 interface LoaderProps {
   message?: string;
   size?: "small" | "large";
+  loading?: boolean;
+  children?: React.ReactNode;
 }
 
-export const Loader: React.FC<LoaderProps> = ({ message, size = "large" }) => {
+export const Loader: React.FC<LoaderProps> = ({
+  message,
+  size = "large",
+  loading = true,
+  children,
+}) => {
   const { colors } = useTheme();
+
+  if (!loading) {
+    return children;
+  }
 
   return (
     <View style={styles.container}>

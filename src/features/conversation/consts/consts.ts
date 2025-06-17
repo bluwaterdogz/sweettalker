@@ -1,6 +1,6 @@
-// import { ConversationModality } from "@common/models/chat/conversation-modality";
-// import { ConversationModalityIdentifier } from "@common/models/chat/";
-// import { ConversationModalityLabel } from "@common/models/chat/conversation-modality-label";
+// import { ConversationModality } from "@common/models/conversation/conversation-modality";
+// import { ConversationModalityIdentifier } from "@common/models/conversation/";
+// import { ConversationModalityLabel } from "@common/models/conversation/conversation-modality-label";
 
 // export const reframingModalities: Record<
 //   ConversationModalityIdentifier,

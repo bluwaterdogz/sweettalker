@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, Pressable } from "react-native";
 import { useTheme } from "@/common/theme/hooks/useTheme";
 import { TruncatedText } from "@/common/components/TruncatedText";
 import { Avatar } from "@/common/components/Avatar";
-import { useThemeBorders } from "@/features/interpretation/hooks/useThemeBorders";
+import { useThemeBorders } from "@/common/hooks/useThemeBorders";
 import { ContactWithConnection } from "../types";
 
 export interface ContactItemProps {
@@ -31,6 +31,7 @@ export const ContactItem: React.FC<ContactItemProps> = ({
         styles.row,
         {
           gap: 8,
+
           backgroundColor: isActive
             ? colors.background.secondary
             : colors.background.primary,
@@ -40,7 +41,13 @@ export const ContactItem: React.FC<ContactItemProps> = ({
       onPress={onPress}
       onLongPress={onLongPress}
     >
-      <Avatar size={30} photoURL={photoURL} style={avatarStyles} />
+      <View
+        style={{
+          paddingRight: 8,
+        }}
+      >
+        <Avatar size={45} photoURL={photoURL} style={avatarStyles} />
+      </View>
       <View style={styles.info}>
         {displayName && (
           <TruncatedText

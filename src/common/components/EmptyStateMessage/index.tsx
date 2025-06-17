@@ -22,8 +22,10 @@ export const EmptyStateMessage: React.FC<EmptyStateMessageProps> = ({
         duration: 500,
         useNativeDriver: true,
       }).start(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % messages.length);
-        fadeIn();
+        requestAnimationFrame(() => {
+          setCurrentIndex((prevIndex) => (prevIndex + 1) % messages.length);
+          fadeIn();
+        });
       });
     };
 

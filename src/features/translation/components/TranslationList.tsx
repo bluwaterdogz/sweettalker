@@ -4,7 +4,6 @@ import { useServices } from "@/services/context";
 import { useSubscribeFirestore } from "@/services/firebase/hooks/useSubscribeFirestore";
 import { UserMessage } from "@common/models/interpretation/user-message";
 import { keyBy } from "lodash";
-import { InterpretationList } from "@/features/interpretation/components/InterpretationList";
 import { updateTranslation, updateTranslationText } from "../store/thunks";
 import { deleteTranslation } from "../store/thunks";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -12,6 +11,11 @@ import { useToast } from "@/common/components/Toast";
 import { TranslationCard } from "./TranslationCard";
 import Fuse from "fuse.js";
 import { useAppNavigation } from "@/app/navigation/hooks/useAppNavigation";
+import { Card } from "@/common/components/Card";
+import { List } from "@/common/components/List";
+import { EmptyStateMessage } from "@/common/components/EmptyStateMessage";
+import { View, StyleSheet } from "react-native";
+import { useThemeBorders } from "@/common/hooks/useThemeBorders";
 
 interface PopulatedTranslation extends Translation {
   userMessage: UserMessage;
@@ -133,19 +137,38 @@ export const TranslationList = ({ conversationId }: TranslationListProps) => {
     return populatedTranslations;
   }, [populatedTranslations, search, showOnlyFavorites]);
 
+  const darkCardStyles = useThemeBorders();
+
   return (
-    <InterpretationList<PopulatedTranslation>
-      items={filteredItems}
-      renderItem={(item) => (
-        <TranslationCard
-          translation={item}
-          userMessage={userMessagesHashmap[item.originalMessageId]}
-          onUpdate={onUpdateTranslation}
-          onDelete={onDeleteTranslation}
-          onUpdateText={onUpdateTranslationText}
-          onInsert={insertIntoConversation}
-        />
-      )}
-    />
+    <View style={styles.content}>
+      <List<PopulatedTranslation>
+        data={filteredItems}
+        emptyComponent={<EmptyStateMessage />}
+        listStyle={styles.list}
+        renderItem={(item) => (
+          <Card style={darkCardStyles}>
+            <TranslationCard
+              translation={item}
+              userMessage={userMessagesHashmap[item.originalMessageId]}
+              onUpdate={onUpdateTranslation}
+              onDelete={onDeleteTranslation}
+              onUpdateText={onUpdateTranslationText}
+              onInsert={insertIntoConversation}
+            />
+          </Card>
+        )}
+      />
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  content: {
+    display: "flex",
+    flexDirection: "column",
+    flex: 1,
+  },
+  list: {
+    padding: 20,
+  },
+});

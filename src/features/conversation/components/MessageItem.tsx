@@ -3,22 +3,22 @@ import { View, Text, StyleSheet } from "react-native";
 import { useTheme } from "@/common/theme/hooks/useTheme";
 
 import { useAppDispatch } from "@/store";
-import { Message as MessageI } from "@common/models/chat/message";
+import { Message as MessageI } from "@common/models/conversation/message";
 import { Contact } from "@common/models/contacts/contact";
 
 interface MessageProps {
   message: MessageI;
-  isUsersMessage: boolean;
-  showUser: boolean;
-  user: Contact;
+  isUsersMessage?: boolean;
+  showUser?: boolean;
+  user: Contact | null;
   onUpdate?: (id: string, data: Partial<MessageI>) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
 }
 
 export const MessageItem: React.FC<MessageProps> = ({
   message,
-  isUsersMessage,
-  showUser,
+  isUsersMessage = false,
+  showUser = false,
   user,
   onUpdate,
   onDelete,
@@ -42,7 +42,7 @@ export const MessageItem: React.FC<MessageProps> = ({
                 },
           ]}
         >
-          {isUsersMessage ? "You" : user.displayName} said:
+          {isUsersMessage ? "You" : user?.displayName} said:
         </Text>
       )}
       <View

@@ -16,6 +16,7 @@ import { subscribeWithCache, SubscriptionCache } from "./caching";
 
 export interface BaseServiceOptions {
   query?: QueryOptions;
+  soleQuery?: QueryOptions;
 }
 
 export abstract class BaseService<
@@ -63,10 +64,13 @@ export abstract class BaseService<
     errorMessage: (ctx) => `Error getting list in ${ctx.constructor.name}`,
   })
   public async getList(options?: Options & BaseServiceOptions): Promise<T[]> {
-    const queryOptions = QueryBuilderFactory.deepMergeQueryOptions(
-      this.getDefaultListQueryOptions(),
-      options?.query
-    );
+    const queryOptions = options?.soleQuery
+      ? options.soleQuery
+      : QueryBuilderFactory.deepMergeQueryOptions(
+          this.getDefaultListQueryOptions(),
+          options?.query
+        );
+
     if (isBatchingRequired(queryOptions)) {
       return this.getBatchedList({
         ...options,
@@ -79,6 +83,10 @@ export abstract class BaseService<
     }
   }
 
+  @withErrorHandling({
+    errorMessage: (ctx) =>
+      `Error getting batched list in ${ctx.constructor.name}`,
+  })
   private getBatchedList(options?: Options & BaseServiceOptions): Promise<T[]> {
     const batchedQueries = createBatchedQueries(options!.query!);
     return batchGetList<T>(options!.query!, batchedQueries, async (chunk) => {
@@ -93,11 +101,14 @@ export abstract class BaseService<
   })
   public async create(
     entity: Omit<T, keyof BaseModel>,
-    options?: Options & BaseServiceOptions
+    options?: Options & BaseServiceOptions,
+    id?: string
   ): Promise<void> {
     const path = this.getPath(options);
     const dto = this.toPersistenceModel(entity);
-    await this.firebaseService.addDocument(path, dto);
+    await this.firebaseService.addDocument(path, dto, undefined, {
+      id,
+    });
   }
 
   @withErrorHandling({
@@ -120,7 +131,7 @@ export abstract class BaseService<
   })
   public async update(
     id: string,
-    data: Partial<T>,
+    data: Omit<Partial<T>, keyof BaseModel>,
     options?: Options & BaseServiceOptions
   ): Promise<void> {
     const path = this.getPath(options);
@@ -149,8 +160,15 @@ export abstract class BaseService<
     return this.firebaseService.subscribeToDocument<T>(
       path,
       id,
-      (data) => callback(this.mapper(data || {})),
-      onError
+      (data) => {
+        return callback(this.mapper(data || {}));
+      },
+      (error) => {
+        console.error(
+          `${error} in single subscription in ${this.constructor.name}`
+        );
+        onError(error);
+      }
     );
   }
 
@@ -159,10 +177,12 @@ export abstract class BaseService<
     onError?: (error: Error) => void,
     options?: Options & BaseServiceOptions
   ) {
-    const queryOptions = QueryBuilderFactory.deepMergeQueryOptions(
-      this.getDefaultListQueryOptions(),
-      options?.query
-    );
+    const queryOptions = options?.soleQuery
+      ? options.soleQuery
+      : QueryBuilderFactory.deepMergeQueryOptions(
+          this.getDefaultListQueryOptions(),
+          options?.query
+        );
 
     const mergedOptions = {
       ...options,
@@ -179,7 +199,10 @@ export abstract class BaseService<
       (data) => {
         onData(data?.map(this.mapper) || []);
       },
-      onError,
+      (error) => {
+        console.error(`${error} in subscription ${this.constructor.name}`);
+        onError?.(error);
+      },
       undefined,
       queryBuilder
     );
@@ -190,10 +213,13 @@ export abstract class BaseService<
     onError?: (error: Error) => void,
     options?: Options & BaseServiceOptions
   ): Unsubscribe {
-    const queryOptions = QueryBuilderFactory.deepMergeQueryOptions(
-      this.getDefaultListQueryOptions(),
-      options?.query
-    );
+    const queryOptions = options?.soleQuery
+      ? options.soleQuery
+      : QueryBuilderFactory.deepMergeQueryOptions(
+          this.getDefaultListQueryOptions(),
+          options?.query
+        );
+
     const batchedQueries = createBatchedQueries(queryOptions);
     const unsubscribers: Unsubscribe[] = batchedQueries.map((chunk) => {
       const path = this.getPathPrefix(options);
@@ -204,7 +230,10 @@ export abstract class BaseService<
           const mapped = data?.map(this.mapper) || [];
           onData(mapped);
         },
-        onError,
+        (error) => {
+          console.error(`${error} in batching ${this.constructor.name}`);
+          onError?.(error);
+        },
         undefined,
         qb
       );

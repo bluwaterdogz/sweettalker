@@ -16,7 +16,7 @@ import { PendingContactsList } from "@/features/contacts/screens/PendingContacts
 import { RootStackParamList } from "./types";
 import { withErrorBoundary } from "@/common/components/ErrorBoundary/WithErrorBoundary";
 
-export const DEFAULT_SCREEN = "Conversations";
+export const DEFAULT_SCREEN = "Translation";
 // export const DEFAULT_SCREEN = "SplashController";
 interface Route {
   name: keyof RootStackParamList;

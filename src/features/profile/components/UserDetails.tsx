@@ -16,7 +16,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({ user }) => {
   return (
     <View style={styles.container}>
       <View style={[common.row, styles.nameContainer]}>
-        <Avatar size={24} photoURL={photoURL} />
+        <Avatar size={24} photoURL={photoURL} iconProportion={0.9} />
         <Text
           style={[
             typography.titleMedium,

@@ -7,6 +7,11 @@ import { QueryOptions } from "@/services/firebase/data/query";
 export class ContactService extends BaseService<Contact> {
   protected firestoreTag: FirestoreCollections = FirestoreCollections.USERS;
 
+  protected getDefaultListQueryOptions(): QueryOptions {
+    // Filter and retrieve based on connections
+    return {};
+  }
+
   protected mapper = (data: any): Contact => {
     return {
       ...data,

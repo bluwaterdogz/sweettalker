@@ -6,7 +6,7 @@ import { FirebaseService } from "./firebase/data/FirebaseService";
 import { ProfileService } from "@/features/profile/api/service";
 import { BillingService } from "@/features/billing/api/BillingService";
 import { AdsService } from "../features/advertisement/api/service";
-import { InterpretationClient } from "@/features/interpretation/api/InterpretationClient";
+import { InterpretationClient } from "@/features/translation/api/InterpretationClient";
 import { FirebaseAuthService } from "./firebase/auth/service";
 import { FirebaseAuthClient } from "./firebase/auth/client";
 import { AuthService } from "@/features/auth/api/service";
@@ -15,6 +15,9 @@ import { CheckInService } from "@/features/check-in/api/CheckInService";
 import { MessageService } from "@/features/conversation/api/MessageService";
 import { ConnectionService } from "@/features/contacts/api/ConnectionService";
 import { ContactService } from "@/features/contacts/api/ContactService";
+import { UserPrivateConversationDetailService } from "@/features/conversation/api/UserPrivateConversationDetailService";
+import { ConversationUserDetailService } from "@/features/conversation/api/ConversationUserDetailService";
+// import { BlockContactService } from "@/features/contacts/api/BlockContactService";
 
 const ServiceContext = createContext<Services | null>(null);
 
@@ -22,10 +25,12 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const firebaseAuthClient = useMemo(() => new FirebaseAuthClient(), []);
+
   const firebaseAuthService = useMemo(
     () => new FirebaseAuthService(firebaseAuthClient),
     [firebaseAuthClient]
   );
+
   const firebaseService = useMemo(
     () => new FirebaseService(firebaseAuthService),
     [firebaseAuthService]
@@ -61,6 +66,12 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({
       ),
       connectionService: new ConnectionService(firebaseService),
       contactService: new ContactService(firebaseService),
+      conversationUserDetailService: new ConversationUserDetailService(
+        firebaseService
+      ),
+      userPrivateConversationDetailService:
+        new UserPrivateConversationDetailService(firebaseService, authService),
+      // blockContactService: new BlockContactService(firebaseService),
     }),
     [firebaseService, authService]
   );

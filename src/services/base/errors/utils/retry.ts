@@ -1,7 +1,7 @@
 import { sleep } from "@/common/utils";
 import { ValidationError } from "..";
 
-const MAX_RETRIES = 2;
+const MAX_RETRIES = 1;
 const INITIAL_RETRY_DELAY = 1000; // 1 second
 
 interface RetryOptions {

@@ -59,15 +59,3 @@ export const useVoiceRecognition = () => {
     stopRecording,
   };
 };
-
-// {
-//       id: "Conversation",
-//       label: "Conversation",
-//       content: (
-//         <VoiceToText
-//           onMessageComplete={console.log}
-//           speaker1Name="John"
-//           speaker2Name="Jane"
-//         />
-//       ),
-//     },

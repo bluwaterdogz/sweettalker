@@ -26,6 +26,7 @@ export interface TextInputProps extends RNTextInputProps {
   clearInput?: () => void;
   disabled?: boolean;
   style?: StyleProp<any>;
+  inputStyle?: StyleProp<any>;
 }
 
 export const TextInput: React.FC<TextInputProps> = ({
@@ -39,6 +40,7 @@ export const TextInput: React.FC<TextInputProps> = ({
   clearInput,
   style,
   disabled = false,
+  inputStyle,
   ...props
 }) => {
   const { colors, typography } = useTheme();
@@ -77,6 +79,7 @@ export const TextInput: React.FC<TextInputProps> = ({
             borderColor: getBorderColor(),
             opacity: disabled ? 0.5 : 1,
           },
+          inputStyle,
         ]}
       >
         {leftIcon && (
@@ -101,7 +104,7 @@ export const TextInput: React.FC<TextInputProps> = ({
             rightIcon && styles.inputWithRightIcon,
             disabled && styles.disabledInput,
           ]}
-          placeholderTextColor={colors.text.primary}
+          placeholderTextColor={colors.text.secondary}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           editable={!disabled && props.editable !== false}

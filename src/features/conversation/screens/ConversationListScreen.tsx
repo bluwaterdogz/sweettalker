@@ -1,29 +1,31 @@
-import { View, Text, StyleSheet, Button, Pressable } from "react-native";
+import { View, StyleSheet, Pressable } from "react-native";
 import { useTheme } from "@/common/theme/hooks/useTheme";
-import { useNavigation } from "@react-navigation/native";
-import { RootStackNavigationProp } from "@/app/navigation/types";
 import { useServices } from "@/services/context";
 import { ConversationList } from "../components/ConversationList";
 import { useSubscribeFirestore } from "@/services/firebase/hooks/useSubscribeFirestore";
 import { Icon } from "@/common/components";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
-import { Conversation } from "@common/models/chat/conversation";
+import { Conversation } from "@common/models/conversation/conversation";
 import { PageHeader } from "@/app/layout/PageHeader";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { Contact } from "@common/models/contacts/contact";
-import { useEffect, useMemo } from "react";
-import { optionalWhereIn } from "../utils/optionalWhereIn";
+import { useMemo } from "react";
 import { Loader } from "@/common/components/Loader";
 import { useAppNavigation } from "@/app/navigation/hooks/useAppNavigation";
 import { useUser } from "@/features/auth/hooks/useUser";
-import { auth, firestore } from "@/app/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { UserPrivateConversationDetails } from "@common/models/conversation/user_private_conversation_details";
+import { optionalWhereIn } from "../utils/optionalWhereIn";
 
 export const ConversationListScreen = () => {
   const { colors } = useTheme();
-  const { conversationService, contactService } = useServices();
+  const {
+    conversationService,
+    contactService,
+    userPrivateConversationDetailService,
+  } = useServices();
   const navigation = useAppNavigation();
   const { t } = useTranslation();
+  const { user } = useUser();
 
   const { loading, result: conversations = [] } = useSubscribeFirestore<
     Conversation[]
@@ -33,13 +35,24 @@ export const ConversationListScreen = () => {
     useSubscribeFirestore<Contact[]>(
       (onData, onError) =>
         contactService.subscribe(onData, onError, {
-          // query: {
-          //   where: optionalWhereIn(conversations.map((c) => c.userIds).flat()),
-          // },
-        })
-      // { enabled: !loading }
+          query: {
+            where: optionalWhereIn(conversations.map((c) => c.userIds).flat()),
+          },
+        }),
+      { enabled: !loading }
     );
-  console.log(contacts);
+
+  const {
+    result: conversationDetails = [],
+    loading: conversationDetailsLoading,
+  } = useSubscribeFirestore<UserPrivateConversationDetails[]>(
+    (onData, onError) =>
+      userPrivateConversationDetailService.subscribe(
+        onData,
+        onError || (() => {})
+      )
+  );
+
   const usersMap = useMemo(() => {
     return new Map<string, Contact>(contacts.map((c) => [c.id, c]));
   }, [contacts]);
@@ -47,6 +60,19 @@ export const ConversationListScreen = () => {
   const onConversationPress = (id: string) => {
     navigation.navigate("Conversation", { conversationId: id });
   };
+
+  const conversationDetailsMap = useMemo(() => {
+    return new Map<string, UserPrivateConversationDetails>(
+      conversationDetails.map((c) => [c.id, c])
+    );
+  }, [conversationDetails]);
+
+  const formattedConversations = useMemo(() => {
+    return conversations.map((c) => ({
+      ...c,
+      readCount: conversationDetailsMap.get(c.id)?.readCount || c.numMessages,
+    }));
+  }, [conversations, conversationDetailsMap]);
 
   return (
     <View
@@ -68,7 +94,7 @@ export const ConversationListScreen = () => {
         ) : (
           <ConversationList
             usersMap={usersMap}
-            conversations={conversations}
+            conversations={formattedConversations}
             onConversationPress={onConversationPress}
             loading={contactsLoading || loading}
           />
@@ -89,6 +115,5 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     flex: 1,
-    paddingVertical: 16,
   },
 });

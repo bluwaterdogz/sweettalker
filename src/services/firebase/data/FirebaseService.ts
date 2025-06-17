@@ -55,25 +55,44 @@ export class FirebaseService {
     );
   }
 
-  async addDocument<T>(col: string, data: T, db: Firestore = firestore) {
+  async addDocument<T>(
+    col: string,
+    data: T,
+    db: Firestore = firestore,
+    options: {
+      id?: string;
+    } = {}
+  ) {
+    const { id } = options;
     const cleanData = removeUndefined(data);
-    return addDoc(collection(db, col), {
+
+    const docRef = id
+      ? doc(db, col, id) // Use custom ID
+      : doc(collection(db, col));
+
+    await setDoc(docRef, {
       ...cleanData,
       createdBy: this.authService.getCurrentUser()?.uid,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       updatedBy: this.authService.getCurrentUser()?.uid,
     });
+
+    return docRef.id; // ✅ Return the ID used
   }
 
-  async addDocumentList<T extends { [key: string]: any }>(
+  async addDocumentList<T extends { id?: string; [key: string]: any }>(
     subCollection: string,
     data: T[],
     db: Firestore = firestore
   ) {
     const batch = writeBatch(db);
     for (const item of data) {
-      const docRef = doc(collection(db, subCollection));
+      const docRef = item.id
+        ? // Use custom ID if present
+          doc(db, subCollection, item.id)
+        : doc(collection(db, subCollection));
+
       const cleanData = removeUndefined(item);
       batch.set(docRef, {
         ...cleanData,

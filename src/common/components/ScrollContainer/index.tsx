@@ -46,7 +46,7 @@ export const ScrollContainer: React.FC<ScrollContainerProps> = ({
   const [scrollY] = useState(new Animated.Value(0));
   const [scrollX] = useState(new Animated.Value(0));
 
-  const finalFadeColor = fadeColor || colors.shadow.primary; // semi-transparent black looks best
+  const finalFadeColor = fadeColor || colors.shadow.primary;
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {

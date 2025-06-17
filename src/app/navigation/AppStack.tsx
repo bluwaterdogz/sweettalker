@@ -19,47 +19,84 @@ import { useServices } from "@/services/context";
 import { useSubscribeFirestore } from "@/services/firebase/hooks/useSubscribeFirestore";
 import { Icon } from "@/common/components/Icon";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Conversation } from "@common/models/chat/conversation";
+import { Conversation } from "@common/models/conversation/conversation";
 import { CountBadge } from "@/common/components/CountBadge";
 import { common } from "@/common/styles";
 import { Connection } from "@common/models/contacts/connection";
 import { useNotificationListeners } from "@/permissions/notifications/useNotificationListeners";
 import { useAppNavigation } from "./hooks/useAppNavigation";
+import { UserPrivateConversationDetails } from "@common/models/conversation/user_private_conversation_details";
+import { keyBy } from "lodash";
+import { useTheme } from "@/common/theme/hooks/useTheme";
 
 const Stack = createNativeStackNavigator();
 
 export const AppStack = () => {
+  const { colors } = useTheme();
   const { isMenuOpen, closeMenu, toggleMenu } = useNavigationMenu();
   const { user } = useUser();
   const { photoURL } = user || {};
   const navigation = useAppNavigation();
-  const { conversationService, connectionService } = useServices();
+  const {
+    conversationService,
+    connectionService,
+    userPrivateConversationDetailService,
+  } = useServices();
 
   useUserAuthListener();
   useSettingsListener();
   useNotificationListeners();
 
   const { result: connections = [] } = useSubscribeFirestore<Connection[]>(
-    (d, e) => connectionService.subscribe(d, e)
+    (d, e) =>
+      connectionService.subscribe(d, e, {
+        query: {
+          where: [
+            {
+              field: "receiverId",
+              operator: "==",
+              value: user?.uid,
+            },
+            {
+              field: "status",
+              operator: "==",
+              value: "pending",
+            },
+          ],
+        },
+      })
   );
 
   const { result: conversations = [] } = useSubscribeFirestore<Conversation[]>(
     (d, e) => conversationService.subscribe(d, e)
   );
 
-  const numPending = useMemo(() => {
-    return connections.filter(
-      (c) => c.receiverId === user?.uid && c.status === "pending"
-    ).length;
-  }, [connections, user]);
-
-  const newMessages = useMemo(
-    () =>
-      conversations.reduce((total, conversation) => {
-        return total + (conversation.unreadCounts?.[user?.uid || ""] || 0);
-      }, 0),
-    [conversations, user]
+  const {
+    result: conversationDetails = [],
+    loading: conversationDetailsLoading,
+  } = useSubscribeFirestore<UserPrivateConversationDetails[]>(
+    (onData, onError) =>
+      userPrivateConversationDetailService.subscribe(
+        onData,
+        onError || (() => {})
+      )
   );
+
+  const conversationDetailsMap = useMemo(() => {
+    return keyBy(conversationDetails, "id");
+  }, [conversationDetails]);
+
+  const numPending = connections.length;
+
+  const newMessages = useMemo(() => {
+    return conversations.reduce((total, conversation) => {
+      return (
+        total +
+        (conversation.numMessages -
+          (conversationDetailsMap[conversation.id]?.readCount || 0))
+      );
+    }, 0);
+  }, [conversations, conversationDetailsMap, user]);
 
   return (
     <Fragment>
@@ -81,7 +118,11 @@ export const AppStack = () => {
                         navigation.navigate("Conversations");
                       }}
                     >
-                      <Icon icon={faEnvelope} size={24} />
+                      <Icon
+                        icon={faEnvelope}
+                        size={24}
+                        color={colors.text.primary}
+                      />
                       {newMessages > 0 && (
                         <View style={common.iconBadge}>
                           <CountBadge count={newMessages} />
@@ -92,7 +133,11 @@ export const AppStack = () => {
                     <Pressable
                       onPress={() => navigation.navigate("PendingConnections")}
                     >
-                      <Icon icon={faUserClock} size={24} />
+                      <Icon
+                        icon={faUserClock}
+                        size={24}
+                        color={colors.text.primary}
+                      />
                       {numPending > 0 && (
                         <View style={common.iconBadge}>
                           <CountBadge count={numPending} />
@@ -106,14 +151,18 @@ export const AppStack = () => {
                           navigation.goBack();
                         }}
                       >
-                        <Icon icon={faArrowLeft} size={24} />
+                        <Icon
+                          icon={faArrowLeft}
+                          size={24}
+                          color={colors.text.primary}
+                        />
                       </Pressable>
                     )}
                   </View>
                 </Fragment>
               }
               onRightIconPress={() => navigation.navigate("Profile")}
-              rightContent={<Avatar photoURL={photoURL} size={24} />}
+              rightContent={<Avatar photoURL={photoURL} size={40} />}
             />
           ),
         }}

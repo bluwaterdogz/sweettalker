@@ -74,6 +74,7 @@ export function useSubscribeFirestore<T>(
 
   return {
     loading,
+    // TODO: turn into error object
     error,
     result: displayResult,
     setResult,

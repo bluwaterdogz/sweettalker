@@ -9,6 +9,7 @@ export const TranslationScreen = () => {
   const { colors } = useTheme();
   const route = useAppRoute<"Translation">();
   const { conversationId, initialMessage } = route.params || {};
+
   return (
     <View
       style={[styles.container, { backgroundColor: colors.background.primary }]}

@@ -2,9 +2,9 @@ import { interpretationServiceApi } from "@/services/axios";
 import { Moderation } from "@common/models/moderation/moderation";
 import { InterpretationParams } from "@common/models/interpretation/interpretation-params";
 import { ModerationParams } from "@common/models/moderation/moderation-params";
-import { MessageOptimalResult } from "@common/models/chat/message-optimal-result";
-import { ConversationSentiment } from "@common/models/chat/conversation-sentiment";
-import { ResponseSuggestion } from "@common/models/chat/response-suggestion";
+import { MessageOptimalResult } from "@common/models/conversation/message-optimal-result";
+import { ConversationSentiment } from "@common/models/conversation/conversation-sentiment";
+import { ResponseSuggestion } from "@common/models/conversation/response-suggestion";
 import { ResponseSuggestionsPromptOptions } from "@common/query/response-suggestion-prompt-options";
 
 export class InterpretationClient<T, O = any> {

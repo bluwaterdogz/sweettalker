@@ -17,6 +17,7 @@ export interface AvatarProps {
   size: number;
   iconColor?: string;
   style?: StyleProp<ViewStyle>;
+  iconProportion?: number;
 }
 
 export const Avatar = ({
@@ -24,6 +25,7 @@ export const Avatar = ({
   size = 24,
   iconColor,
   style,
+  iconProportion = 0.5,
 }: AvatarProps) => {
   const { colors } = useTheme();
   return (
@@ -33,9 +35,9 @@ export const Avatar = ({
         common.avatar,
         {
           backgroundColor: colors.background.primary,
-          width: size * 1.5,
-          height: size * 1.5,
-          borderRadius: size * 1.5,
+          width: size,
+          height: size,
+          borderRadius: size,
         },
         style,
       ]}
@@ -47,9 +49,9 @@ export const Avatar = ({
             styles.image,
             common.avatar,
             {
-              width: size * 1.5,
-              height: size * 1.5,
-              borderRadius: size * 1.5,
+              width: size,
+              height: size,
+              borderRadius: size,
             },
           ]}
         />
@@ -58,7 +60,7 @@ export const Avatar = ({
           color={iconColor || colors.text.primary}
           style={[common.avatar]}
           icon={faUser}
-          size={size * 0.6}
+          size={size * iconProportion}
         />
       )}
     </View>

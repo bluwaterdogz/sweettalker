@@ -17,7 +17,7 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
   color,
   label,
   style,
-  backgroundColor = "#F2F2F2",
+  backgroundColor,
   height = 38,
   labelStyle,
 }) => {
@@ -38,7 +38,16 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
   });
 
   return (
-    <View style={[styles.container, { backgroundColor, height }, style]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: backgroundColor ?? colors.background.secondary,
+          height,
+        },
+        style,
+      ]}
+    >
       <Animated.View
         style={[
           styles.bar,
@@ -51,7 +60,7 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
       >
         {label && (
           <Text
-            style={[styles.label, { color: colors.text.primary }, labelStyle]}
+            style={[styles.label, { color: colors.text.tertiary }, labelStyle]}
             numberOfLines={1}
           >
             {label}

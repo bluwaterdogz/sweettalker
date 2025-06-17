@@ -1,7 +1,7 @@
 import { BaseService } from "@/services/base/BaseService";
 import { FirestoreCollections } from "@/services/firebase/collections";
 import { FirebaseService } from "@/services/firebase/data/FirebaseService";
-import { Conversation, ConversationMapper } from "@common/models/chat";
+import { Conversation, ConversationMapper } from "@common/models/conversation";
 import { BaseModel } from "@common/models/base/base";
 import { QueryOptions } from "@/services/firebase/data/query";
 import { auth } from "@/app/firebase";
@@ -38,32 +38,23 @@ export class ConversationService extends BaseService<Conversation> {
     return await super.update(id, data);
   }
 
-  async create(
-    data: Omit<Conversation, keyof BaseModel | "unreadCounts">
-  ): Promise<void> {
-    // Initialize unreadCounts for all users
-    const unreadCounts = data.userIds.reduce(
-      (acc: { [userId: string]: number }, userId: string) => {
-        acc[userId] = 0;
-        return acc;
-      },
-      {}
-    );
-
-    await super.create({
-      ...data,
-      unreadCounts,
-    });
+  async create(data: Omit<Conversation, keyof BaseModel>): Promise<void> {
+    await super.create(data);
   }
 
   async getConversationId(contactId: string) {
     const conversations = await super.getList({
-      query: {
+      soleQuery: {
         where: [
-          { field: "userIds", operator: "array-contains", value: contactId },
+          {
+            field: "userIds",
+            operator: "array-contains",
+            value: auth.currentUser?.uid,
+          },
         ],
       },
     });
-    return conversations[0]?.id;
+
+    return conversations.find((c) => c.userIds.includes(contactId))?.id;
   }
 }

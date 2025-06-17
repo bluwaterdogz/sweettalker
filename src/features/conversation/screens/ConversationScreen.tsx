@@ -3,31 +3,39 @@ import { View, Text, StyleSheet } from "react-native";
 import { useServices } from "@/services/context";
 import { useTheme } from "@/common/theme/hooks/useTheme";
 import { useUser } from "@/features/auth/hooks/useUser";
-import { MessageItem } from "../components/MessageItem";
 import { Avatar } from "@/common/components/Avatar";
 import { MultiAvatar } from "@/common/components/MultiAvatar/MultiAvatar";
-import { getRandomUser } from "@/features/auth/mocks";
-import { Conversation, Message } from "@common/models/chat";
+import { Conversation, Message } from "@common/models/conversation";
 import { useSubscribeFirestore } from "@/services/firebase/hooks/useSubscribeFirestore";
-import { useThemeBorders } from "@/features/interpretation/hooks/useThemeBorders";
+import { useThemeBorders } from "@/common/hooks/useThemeBorders";
 import { ConversationControls } from "../components/ConversationControls";
 import { useAppRoute } from "@/app/navigation/hooks/useAppRoute";
 import { Contact } from "@common/models/contacts/contact";
 import { optionalWhereIn } from "../utils/optionalWhereIn";
-import { updateConversation } from "../store/thunks";
+import { updateUserPrivateConversationDetails } from "../store/thunks";
 import { useAppDispatch } from "@/store";
 import { Loader } from "@/common/components/Loader";
+
+import { ConversationUserDetails } from "@common/models/conversation/conversation_user_details";
+import { MessageList } from "../components/MessageList";
+import { useAppNavigation } from "@/app/navigation/hooks/useAppNavigation";
 
 export function ConversationScreen() {
   const { user } = useUser();
   const { colors } = useTheme();
-  const { conversationService, messageService, contactService } = useServices();
+  const {
+    conversationService,
+    messageService,
+    contactService,
+    conversationUserDetailService,
+  } = useServices();
 
   const route = useAppRoute<"Conversation">();
-  const { conversationId } = route.params;
+  const { conversationId, initialMessage } = route.params;
   const dispatch = useAppDispatch();
-
+  const navigation = useAppNavigation();
   const avatarStyle = useThemeBorders();
+
   const { loading, result: conversation } = useSubscribeFirestore<Conversation>(
     (onData, onError) =>
       conversationService.subscribeSingle(
@@ -36,23 +44,6 @@ export function ConversationScreen() {
         conversationId
       )
   );
-
-  const updateReadStatus = useCallback(async () => {
-    if (!conversation) return;
-    dispatch(
-      updateConversation({
-        id: conversationId,
-        unreadCounts: {
-          ...conversation.unreadCounts,
-          [user!.uid]: 0,
-        },
-      })
-    );
-  }, [conversation, conversationId, conversationService]);
-
-  useEffect(() => {
-    updateReadStatus();
-  }, [conversationId]);
 
   const { result: contacts = [] } = useSubscribeFirestore<Contact[]>(
     (onData, onError) =>
@@ -65,23 +56,45 @@ export function ConversationScreen() {
     { enabled: loading }
   );
 
-  const usersMap = useMemo(() => {
-    return new Map(contacts.map((c) => [c.id, c]));
-  }, [contacts]);
+  const { result: conversationUserDetails = [] } = useSubscribeFirestore<
+    ConversationUserDetails[]
+  >((onData, onError) =>
+    conversationUserDetailService.subscribeCustomId(onData, onError, {
+      conversationId,
+      userId: user!.uid,
+    })
+  );
 
-  const { loading: messageLoading, result: messages = [] } =
-    useSubscribeFirestore<Message[]>((onData, onError) =>
+  const { result: messages = [] } = useSubscribeFirestore<Message[]>(
+    (onData, onError) =>
       messageService.subscribe(onData, onError, {
         conversationId,
         query: { orderBy: [{ field: "createdAt", direction: "asc" }] },
       })
-    );
+  );
 
-  const users =
-    conversation?.userIds.map((id) => {
-      const contact = usersMap.get(id);
-      return contact || getRandomUser();
-    }) || [];
+  const updateReadStatus = useCallback(async () => {
+    if (!conversation) return;
+    dispatch(
+      updateUserPrivateConversationDetails({
+        conversationId,
+        readCount: conversation.numMessages,
+      })
+    );
+  }, [conversation, conversationId, conversationService]);
+
+  useEffect(() => {
+    updateReadStatus();
+  }, [conversation?.numMessages]);
+
+  const users = useMemo<Contact[]>(() => {
+    const allUsersMap = new Map(contacts.map((c) => [c.id, c]));
+    const users =
+      conversation?.userIds.map((id) => {
+        return allUsersMap.get(id);
+      }) || [];
+    return users as Contact[];
+  }, [contacts]);
 
   const otherUsers = users.filter(({ id }) => id !== user?.uid) || [];
 
@@ -92,40 +105,68 @@ export function ConversationScreen() {
   if (loading) {
     return <Loader />;
   }
+
   return (
     <View
       style={[styles.container, { backgroundColor: colors.background.primary }]}
     >
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={[styles.headerText, { color: colors.text.primary }]}>
-          <Avatar photoURL={user?.photoURL} size={45} style={avatarStyle} />
-        </Text>
+      <View
+        style={[
+          styles.header,
+          {
+            borderBottomWidth: 1,
+            borderColor: colors.neutral[300],
+          },
+        ]}
+      >
+        <View>
+          <Avatar
+            photoURL={user?.photoURL}
+            size={45}
+            style={avatarStyle}
+            // iconProportion={0.6}
+          />
+        </View>
         {otherUsers.length > 0 && (
-          <Text style={[styles.headerText, { color: colors.text.primary }]}>
-            <MultiAvatar users={otherUsers} avatarStyle={avatarStyle} />
-          </Text>
+          <View>
+            <MultiAvatar
+              onUserPress={(user) => {
+                navigation.navigate("ContactDetail", { contactId: user.id });
+              }}
+              size={45}
+              users={otherUsers}
+              avatarStyle={avatarStyle}
+            />
+          </View>
         )}
       </View>
 
       <View style={styles.messagesContainer}>
-        {messages.map((msg, index) => {
-          return (
-            <MessageItem
-              key={msg.id}
-              message={msg}
-              showUser={msg.createdBy !== messages[index - 1]?.createdBy}
-              isUsersMessage={msg.createdBy === user?.uid}
-              user={userMap.get(msg.createdBy!) || getRandomUser()}
-            />
-          );
-        })}
+        <MessageList
+          messages={messages}
+          userMap={userMap}
+          currentUserId={user?.uid}
+          scrollToBottom={true}
+        />
       </View>
-      <ConversationControls
-        conversation={conversation!}
-        userMap={userMap}
-        messages={messages}
-      />
+      <View
+        style={[
+          styles.controlsContainer,
+          {
+            borderTopWidth: 1,
+            borderColor: colors.neutral[300],
+          },
+        ]}
+      >
+        <ConversationControls
+          conversation={conversation!}
+          userMap={userMap}
+          messages={messages}
+          conversationUserDetails={conversationUserDetails}
+          initialMessage={initialMessage}
+        />
+      </View>
     </View>
   );
 }
@@ -133,13 +174,13 @@ export function ConversationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 24,
+    paddingHorizontal: 22,
+    paddingVertical: 8,
   },
   headerText: {
     fontSize: 16,
@@ -147,6 +188,8 @@ const styles = StyleSheet.create({
   },
   messagesContainer: {
     flex: 1,
-    gap: 8,
+  },
+  controlsContainer: {
+    paddingHorizontal: 16,
   },
 });

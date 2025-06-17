@@ -62,20 +62,14 @@ export abstract class InterpretationService<
   ): Promise<void> {
     const { model, input } = options;
 
-    // const userMessageDoc = await this.persistUserMessage(input);
-
-    // const userMessageId = userMessageDoc.id;
+    const originalMessage = await this.persistOriginalMessage(input);
 
     const populatedInterpretations = interpretations.map((interpretation) => ({
       ...interpretation,
-      // originalMessageId: userMessageId,
+      originalMessageId: originalMessage.id,
       model,
     }));
-    console.log(
-      "populatedInterpretations",
-      populatedInterpretations,
-      this.firestoreTag
-    );
+
     await Promise.all(
       populatedInterpretations.map((interpretation) =>
         this.firebaseService.addDocument(this.firestoreTag, interpretation)
@@ -87,7 +81,9 @@ export abstract class InterpretationService<
     errorMessage: "Error persisting user message:",
     maxRetries: 0,
   })
-  protected async persistUserMessage(text: string): Promise<any | undefined> {
+  protected async persistOriginalMessage(
+    text: string
+  ): Promise<any | undefined> {
     const userMessageDoc = await this.firebaseService.addDocument(
       this.firestoreUserMessageTag,
       { text }

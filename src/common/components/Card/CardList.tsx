@@ -1,15 +1,9 @@
 import React, { useState } from "react";
-import {
-  View,
-  StyleSheet,
-  FlatList,
-  Text,
-  ViewStyle,
-  StyleProp,
-} from "react-native";
+import { View, StyleSheet, Text, ViewStyle, StyleProp } from "react-native";
 import { useTheme } from "../../theme/hooks/useTheme";
 import { FlipCard } from "./FlipCard";
 import { Card } from "./Card";
+import { List } from "@/common/components/List";
 
 interface CardListProps<T> {
   data: T[];
@@ -40,7 +34,7 @@ export const CardList = <T extends { id: string }>({
     }));
   };
 
-  const renderCard = ({ item }: { item: T }) => {
+  const renderCard = (item: T) => {
     const isFlipped = flippedCards[item.id] || false;
     if (renderItemBack != null) {
       return (
@@ -62,48 +56,42 @@ export const CardList = <T extends { id: string }>({
     }
   };
 
-  if (data.length === 0) {
-    return (
-      <View style={styles.emptyContainer}>
-        {emptyListContent ?? (
-          <Text
-            style={[typography.headingMedium, { color: colors.text.secondary }]}
-          >
-            None Found
-          </Text>
-        )}
-      </View>
-    );
-  }
+  const emptyComponent = (
+    <View style={styles.emptyContainer}>
+      {emptyListContent ?? (
+        <Text
+          style={[typography.headingMedium, { color: colors.text.secondary }]}
+        >
+          None Found
+        </Text>
+      )}
+    </View>
+  );
 
   return (
-    <FlatList
+    <List
       data={data}
       renderItem={renderCard}
       keyExtractor={(item) => item.id}
       contentContainerStyle={styles.list}
-      showsVerticalScrollIndicator={false}
+      emptyComponent={emptyComponent}
     />
   );
 };
 
 const styles = StyleSheet.create({
-  list: {
-    padding: 16,
-    gap: 8,
-    overflow: "visible",
-  },
   cardContainer: {
-    marginBottom: 8,
-    overflow: "visible",
+    marginBottom: 16,
   },
   card: {
-    marginBottom: 8,
+    marginBottom: 16,
+  },
+  list: {
+    padding: 16,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 32,
   },
 });

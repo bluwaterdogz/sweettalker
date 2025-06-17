@@ -1,21 +1,59 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { Button, Loader } from "@/common/components";
 import { AnimatedProgressBar } from "@/common/components/AnimatedProgressBar";
-import { ConversationSentiment } from "@common/models/chat/conversation-sentiment";
+import { ConversationSentiment } from "@common/models/conversation/conversation-sentiment";
 import { useTheme } from "@/common/theme/hooks/useTheme";
+import { Icon } from "@/common/components/Icon";
+import {
+  faArrowTrendDown,
+  faArrowTrendUp,
+} from "@fortawesome/free-solid-svg-icons";
+import { Message } from "@common/models/conversation";
+import { usePromise } from "@/common/hooks/usePromise";
+import { useServices } from "@/services/context";
+import { useUser } from "@/features/auth/hooks/useUser";
+import { common } from "@/common/styles";
 
 interface SentimentDisplayProps {
-  sentiment: ConversationSentiment;
+  messages: Message[];
   toneColor: string;
   interestColor: string;
+  onClose: () => void;
 }
 
-const SentimentDisplay: React.FC<SentimentDisplayProps> = ({
-  sentiment,
+export const SentimentDisplay: React.FC<SentimentDisplayProps> = ({
+  messages,
   toneColor,
   interestColor,
+  onClose,
 }) => {
-  const { typography } = useTheme();
+  const { typography, colors } = useTheme();
+  const { translationService } = useServices();
+  const { user } = useUser();
+  const getTrendIcon = (trend: "rising" | "falling" | "steady") => {
+    switch (trend) {
+      case "rising":
+        return faArrowTrendUp;
+      case "falling":
+        return faArrowTrendDown;
+      default:
+        return null;
+    }
+  };
+
+  const {
+    data: sentiment,
+    isLoading,
+    error,
+    refresh,
+  } = usePromise<ConversationSentiment>(async () => {
+    return await translationService.getConversationSentiment(
+      messages,
+      user!.uid
+    );
+  });
+
   const {
     toneScore,
     toneLabel,
@@ -29,40 +67,138 @@ const SentimentDisplay: React.FC<SentimentDisplayProps> = ({
     toneExplanation,
     interestExplanation,
     attachmentStyleExplanation,
-  } = sentiment;
+  } = sentiment ?? {
+    toneScore: 0,
+    interestScore: 0,
+    toneTrend: "steady",
+    interestTrend: "steady",
+    toneTrendConfidence: 0,
+    interestTrendConfidence: 0,
+    toneExplanation: "",
+  };
   return (
     <View style={styles.root}>
-      <View style={styles.card}>
-        <View style={styles.row}>
-          <Text style={[styles.title, typography.headingSmall]}>Tone</Text>
-          <Text style={styles.score}>
-            {toneScore.toFixed(1).replace(".", ",")}
-          </Text>
+      <Text
+        style={[
+          typography.headingMedium,
+          {
+            color: colors.text.primary,
+          },
+        ]}
+      >
+        Conversation Sentiment
+      </Text>
+      {isLoading || sentiment == null ? (
+        <View style={common.row}>
+          <Loader />
         </View>
-        <AnimatedProgressBar
-          value={toneScore / 10}
-          color={toneColor}
-          label={toneLabel}
-          style={{ marginTop: 8, marginBottom: 8 }}
-        />
-        <Text style={styles.description}>{toneExplanation}</Text>
-      </View>
-      <View style={styles.card}>
-        <View style={styles.row}>
-          <Text style={[styles.title, typography.headingSmall]}>
-            Romantic Interest
-          </Text>
-          <Text style={styles.score}>
-            {interestScore.toFixed(1).replace(".", ",")}
-          </Text>
+      ) : (
+        <View>
+          <View style={styles.card}>
+            <View style={styles.row}>
+              <Text
+                style={[
+                  styles.title,
+                  typography.headingSmall,
+                  {
+                    color: colors.text.primary,
+                  },
+                ]}
+              >
+                Tone
+              </Text>
+              {toneTrend !== "steady" && (
+                <Icon
+                  icon={getTrendIcon(toneTrend)!}
+                  size={32}
+                  color={
+                    toneTrend === "rising"
+                      ? colors.success.primary
+                      : colors.error.primary
+                  }
+                  style={styles.trendIcon}
+                />
+              )}
+              <Text
+                style={[
+                  styles.score,
+                  {
+                    color: colors.text.primary,
+                  },
+                ]}
+              >
+                {toneScore}/10
+              </Text>
+            </View>
+            <AnimatedProgressBar
+              value={toneScore / 10}
+              color={toneColor}
+              label={toneLabel}
+              style={{ marginTop: 8, marginBottom: 8 }}
+            />
+            <Text
+              style={[
+                styles.description,
+                {
+                  color: colors.text.primary,
+                },
+              ]}
+            >
+              {toneExplanation}
+            </Text>
+          </View>
+          <View style={styles.card}>
+            <View style={styles.row}>
+              <Text
+                style={[
+                  styles.title,
+                  typography.headingSmall,
+                  {
+                    color: colors.text.primary,
+                  },
+                ]}
+              >
+                Romantic Interest
+              </Text>
+              {interestTrend !== "steady" && (
+                <Icon
+                  icon={getTrendIcon(interestTrend)!}
+                  size={32}
+                  color={
+                    interestTrend === "rising"
+                      ? colors.success.primary
+                      : colors.error.primary
+                  }
+                  style={styles.trendIcon}
+                />
+              )}
+              <Text
+                style={[
+                  styles.score,
+                  {
+                    color: colors.text.primary,
+                  },
+                ]}
+              >
+                {interestScore}/10
+              </Text>
+            </View>
+            <AnimatedProgressBar
+              value={interestScore / 10}
+              color={interestColor}
+              label={interestLabel}
+              style={{ marginTop: 8, marginBottom: 8 }}
+            />
+            <Text style={[styles.description, { color: colors.text.primary }]}>
+              {interestExplanation}
+            </Text>
+          </View>
         </View>
-        <AnimatedProgressBar
-          value={interestScore / 10}
-          color={interestColor}
-          label={interestLabel}
-          style={{ marginTop: 8, marginBottom: 8 }}
-        />
-        <Text style={styles.description}>{interestExplanation}</Text>
+      )}
+
+      <View style={common.row}>
+        <Button variant="outline" title="Close" onPress={onClose} />
+        <Button variant="outline" title="Refresh" onPress={refresh} />
       </View>
     </View>
   );
@@ -70,7 +206,6 @@ const SentimentDisplay: React.FC<SentimentDisplayProps> = ({
 
 const styles = StyleSheet.create({
   root: {
-    flex: 1,
     padding: 0,
   },
   header: {
@@ -82,15 +217,20 @@ const styles = StyleSheet.create({
     color: "#111",
     lineHeight: 40,
   },
+  trendIcon: {
+    marginLeft: "auto",
+    marginRight: 8,
+  },
   card: {
-    borderRadius: 24,
     marginHorizontal: 8,
     marginBottom: 18,
-    shadowColor: "#000",
     shadowOpacity: 0.06,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 2 },
     elevation: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 24,
+    gap: 8,
   },
   row: {
     flexDirection: "row",
@@ -112,5 +252,3 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
 });
-
-export default SentimentDisplay;

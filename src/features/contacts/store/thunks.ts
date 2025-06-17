@@ -2,8 +2,6 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ThunkAPI } from "@/store/types";
 import { Connection } from "@common/models/contacts/connection";
 import { serializeError } from "@/services/base/errors/utils/serializeError";
-import { Timestamp } from "firebase/firestore";
-import { v4 as uuidv4 } from "uuid";
 import { BaseModel } from "@common/models/base/base";
 
 interface CreateConnectionParams {
@@ -29,7 +27,10 @@ export const createConnection = createAsyncThunk<
         receiverId,
         status: "pending",
       };
-      await services.connectionService.create(connection);
+      await services.connectionService.updatewithCustomId(connection, {
+        id1: requesterId,
+        id2: receiverId,
+      });
     } catch (error) {
       return rejectWithValue(serializeError(error));
     }

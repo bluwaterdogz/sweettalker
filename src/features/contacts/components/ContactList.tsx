@@ -25,7 +25,7 @@ export const ContactList: React.FC<ContactListProps> = ({
       setSearchValue={setSearchValue}
       useInternalSearchFilter={!setSearchValue}
       searchKeys={["displayName", "email"]}
-      renderItem={(item) => {
+      renderItem={(item: ContactWithConnection) => {
         return (
           <ContactItem
             key={item.id}

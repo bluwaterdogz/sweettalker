@@ -9,6 +9,7 @@ import {
 
 import { Icon } from "@/common/components";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { useThemeBorders } from "@/common/hooks/useThemeBorders";
 
 export interface PillProps<V> {
   label: string;
@@ -35,18 +36,23 @@ export function Pill<V = string>(props: PillProps<V>) {
     isSelected,
   } = props;
   const { colors } = useTheme();
+
   const backgroundColor = isSelected
     ? color || colors.text.primary
     : colors.background.primary;
+
   const textColor = isSelected
     ? colors.background.primary
     : colors.text.primary;
+
+  const borderStyles = useThemeBorders();
 
   return (
     <TouchableOpacity
       style={[
         styles.pill,
         { backgroundColor },
+        borderStyles,
         style,
         (disabled || disabled) && styles.disabled,
       ]}

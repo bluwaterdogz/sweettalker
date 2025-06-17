@@ -1,15 +1,17 @@
 import { useAppDispatch, useAppSelector } from "@/store";
-import { sendMessage, updateConversation } from "../store/thunks";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { View, StyleSheet, Pressable, Text } from "react-native";
-
+import { sendMessage, updateConversationUserDetails } from "../store/thunks";
+import { memo, useCallback, useMemo, useState } from "react";
+import { View, StyleSheet, Text } from "react-native";
+import { Modal } from "@/common/components/Modal";
 import { useUser } from "@/features/auth/hooks/useUser";
-import { Button, Icon, TextInput } from "@/common/components";
+import { Button, TextInput, CircleButton } from "@/common/components";
 import {
-  faCheck,
-  faGaugeSimple,
   faWandMagicSparkles,
-  faRecycle,
+  faChartLine,
+  faShield,
+  faShieldHeart,
+  faSyncAlt,
+  faBrain,
 } from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from "@/common/theme/hooks/useTheme";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
@@ -17,296 +19,252 @@ import { useServices } from "@/services/context";
 import { useConfirmation } from "@/common/components/Confirmation";
 import { updateSettings } from "@/features/profile/store/thunks";
 import { detectToxicPhrases } from "../utils/utils";
-import { Message } from "@common/models/chat/message";
-import { TooltipOverlay } from "@/common/components/TooltipOverlay";
+import { Message } from "@common/models/conversation/message";
 import { common } from "@/common/styles";
-import { ResponseSuggestionDisplay } from "./ResponseSuggestionDisplay";
-import { useThemeBorders } from "@/features/interpretation/hooks/useThemeBorders";
-import SentimentDisplay from "./SentimentDisplay";
+import { useThemeBorders } from "@/common/hooks/useThemeBorders";
+import { SentimentDisplay } from "./SentimentDisplay";
 import { useAppNavigation } from "@/app/navigation/hooks/useAppNavigation";
 import { useTypingStatus } from "@/features/conversation/hooks/useTypingStatus";
-import { Conversation } from "@common/models/chat/conversation";
+import { Conversation } from "@common/models/conversation/conversation";
 import { Contact } from "@common/models/contacts/contact";
+import { ConversationUserDetails } from "@common/models/conversation/conversation_user_details";
+import { ResponseSuggestionDisplay } from "./ResponseSuggestionDisplay";
 
 interface ConversationControlsProps {
   conversation: Conversation;
   messages: Message[];
   userMap: Map<string, Contact>;
+  conversationUserDetails: ConversationUserDetails[];
+  initialMessage?: string;
 }
-export const ConversationControls = ({
-  conversation,
-  messages,
-  userMap,
-}: ConversationControlsProps) => {
-  const { colors } = useTheme();
-  const { user } = useUser();
-  const { t } = useTranslation();
-  const dispatch = useAppDispatch();
-  const [input, setInput] = useState("");
-  const navigation = useAppNavigation();
-  const { safeChat } = useAppSelector((state) => state.settings);
-  const confirm = useConfirmation();
-  const { translationService, conversationService } = useServices();
-  const [tooltipContent, setTooltipContent] = useState<React.ReactNode | null>(
-    null
-  );
 
-  const buttonStyles = useThemeBorders();
+export const ConversationControls = memo(
+  ({
+    conversation,
+    messages,
+    conversationUserDetails,
+    userMap,
+    initialMessage = "",
+  }: ConversationControlsProps) => {
+    const { colors } = useTheme();
+    const { user } = useUser();
+    const { t } = useTranslation();
+    const dispatch = useAppDispatch();
+    const [input, setInput] = useState(initialMessage);
+    const navigation = useAppNavigation();
+    const { safeChat } = useAppSelector((state) => state.settings);
+    const confirm = useConfirmation();
+    const { translationService, conversationService } = useServices();
+    const [tooltipContent, setTooltipContent] =
+      useState<React.ReactNode | null>(null);
 
-  const submitMessage = async () => {
-    dispatch(
-      sendMessage({
+    const submitMessage = async () => {
+      dispatch(
+        sendMessage({
+          conversationId: conversation.id,
+          input,
+        })
+      );
+      setInput("");
+    };
+
+    const confirmSend = () => {
+      confirm({
+        title: t("chat.confirmSendTitle"),
+        message:
+          "There might be a better way to phrase that, do you want to try it out?",
+        cancelText: "Rework",
+        confirmText: "Send",
+        onConfirm: () => {
+          submitMessage();
+        },
+        onCancel: () => {
+          goToTranslation();
+        },
+      });
+    };
+
+    const goToTranslation = () => {
+      navigation.navigate("Translation", {
         conversationId: conversation.id,
-        input,
-      })
-    );
-    setInput("");
-  };
+        initialMessage: input,
+      });
+    };
 
-  const confirmSend = () => {
-    confirm({
-      title: t("chat.confirmSendTitle"),
-      message:
-        "There might be a better way to phrase that, do you want to try it out?",
-      cancelText: "Rework",
-      confirmText: "Send",
-      onConfirm: () => {
-        submitMessage();
-      },
-      onCancel: () => {
-        goTranslation();
-      },
-    });
-  };
-
-  const goTranslation = () => {
-    navigation.navigate("Translation", {
-      conversationId: conversation.id,
-      initialMessage: input,
-    });
-  };
-
-  const handleSend = async () => {
-    if (!input.trim() || !user?.uid) return;
-    const shortToxic = input.split(" ").length < 5 && detectToxicPhrases(input);
-    if (safeChat) {
-      if (shortToxic) {
-        confirmSend();
-      } else {
-        const result = await translationService.isMessageOptimal(input);
-        if (result.score < 5) {
+    const handleSend = async () => {
+      if (!input.trim() || !user?.uid) return;
+      const shortToxic =
+        input.split(" ").length < 5 && detectToxicPhrases(input);
+      if (safeChat) {
+        if (shortToxic) {
           confirmSend();
         } else {
-          submitMessage();
+          const result = await translationService.isMessageOptimal(input);
+          if (result.score < 5) {
+            confirmSend();
+          } else {
+            submitMessage();
+          }
         }
+      } else {
+        submitMessage();
       }
-    } else {
-      submitMessage();
-    }
-  };
-
-  const updateUserTypingStatus = useCallback(async () => {
-    if (!conversation) return;
-    dispatch(
-      updateConversation({
-        id: conversation.id,
-        typingUserIds: {
-          ...conversation.typingUserIds,
-          [user!.uid]: Date.now(),
-        },
-      })
-    );
-  }, [conversation, conversationService]);
-
-  const deleteUserTypingStatus = useCallback(async () => {
-    if (!conversation) return;
-    const { [user!.uid]: _, ...newTypingUserIds } = {
-      ...conversation.typingUserIds,
     };
-    dispatch(
-      updateConversation({
-        id: conversation.id,
-        typingUserIds: newTypingUserIds,
-      })
-    );
-  }, [conversation, conversationService]);
 
-  useTypingStatus(input, {
-    onTyping: () => updateUserTypingStatus(),
-    onTypingEnd: () => deleteUserTypingStatus(),
-  });
+    const updateUserTypingStatus = useCallback(async () => {
+      if (!conversation) return;
+      dispatch(
+        updateConversationUserDetails({
+          conversationId: conversation.id,
+          userId: user!.uid,
+          isTyping: Date.now(),
+        })
+      );
+    }, [conversation, conversationService]);
 
-  const showResponseSuggestions = useCallback(async () => {
-    const responseSuggestions = await translationService.getResponseSuggestions(
-      messages,
-      user!.uid,
-      {}
-    );
+    const deleteUserTypingStatus = useCallback(async () => {
+      if (!conversation) return;
+      dispatch(
+        updateConversationUserDetails({
+          conversationId: conversation.id,
+          userId: user!.uid,
+          isTyping: 0,
+        })
+      );
+    }, [conversation, conversationService]);
 
-    setTooltipContent(
-      <View>
-        <View style={common.row}>
-          <ResponseSuggestionDisplay
-            onSelectResponseSuggestion={(responseSuggestion) => {
-              setInput(responseSuggestion.text);
-              setTooltipContent(null);
-            }}
-            responseSuggestions={responseSuggestions
-              .sort((x) => x.score)
-              .reverse()}
-          />
-        </View>
-        <View style={common.row}>
-          <Button
-            variant="outline"
-            title={
-              <Icon icon={faRecycle} size={18} color={colors.text.secondary} />
-            }
-            onPress={() => {
-              setTooltipContent(null);
-              showResponseSuggestions();
-            }}
-          />
-        </View>
-      </View>
-    );
-  }, [messages, user]);
+    useTypingStatus(input, {
+      onTyping: () => updateUserTypingStatus(),
+      onTypingEnd: () => deleteUserTypingStatus(),
+      typingDebounceMs: 1000,
+    });
 
-  const showSentiment = useCallback(async () => {
-    const sentiment = await translationService.getConversationSentiment(
-      messages,
-      user!.uid
-    );
-    setTooltipContent(
-      <View>
+    const showResponseSuggestions = useCallback(async () => {
+      setTooltipContent(
+        <ResponseSuggestionDisplay
+          messages={messages}
+          onSelectResponseSuggestion={(responseSuggestion) => {
+            setInput(responseSuggestion.text);
+            setTooltipContent(null);
+          }}
+          onClose={() => setTooltipContent(null)}
+        />
+      );
+    }, [messages, user]);
+
+    const showSentiment = useCallback(async () => {
+      setTooltipContent(
         <SentimentDisplay
-          sentiment={sentiment}
+          messages={messages}
           toneColor={colors.listItemColors[0]}
           interestColor={colors.listItemColors[1]}
+          onClose={() => setTooltipContent(null)}
         />
-      </View>
-    );
-  }, [messages, user]);
+      );
+    }, [messages, user]);
 
-  const inputRef = useRef<typeof TextInput>(null);
+    const typingUsers = useMemo(() => {
+      return conversationUserDetails
+        .filter(
+          (conversationUserDetails) =>
+            conversationUserDetails.id !== user!.uid &&
+            conversationUserDetails.isTyping + 1000 > Date.now()
+        )
+        .map((conversationUserDetails) => {
+          const user = userMap.get(conversationUserDetails.id);
+          return user;
+        });
+    }, [conversationUserDetails, userMap]);
 
-  const typingUsers = useMemo(() => {
-    return Object.keys(conversation.typingUserIds)
-      .filter(
-        (userId) =>
-          !!conversation.typingUserIds[userId] &&
-          userId !== user?.uid &&
-          conversation.typingUserIds[userId] + 1000 > Date.now()
-      )
-      .map((userId) => userMap.get(userId));
-  }, [conversation, userMap]);
+    const activateSafeChat = useCallback(() => {
+      dispatch(
+        updateSettings({
+          safeChat: !safeChat,
+        })
+      );
+    }, [safeChat]);
 
-  return (
-    <View style={[styles.controlsContainer]}>
-      <View style={[common.row, styles.row]}>
-        {typingUsers.length > 0 && (
-          <Text>
-            {typingUsers.map((user) => user?.displayName).join(", ")} is
-            typing...
-          </Text>
-        )}
-      </View>
-      <View style={[common.row, styles.row]}>
-        <Pressable
-          style={[
-            buttonStyles,
-            styles.controlButton,
-            {
-              backgroundColor: colors.background.primary,
-            },
-          ]}
-          onPress={() => {
-            handleSend();
-          }}
-          onLongPress={() => {
-            dispatch(
-              updateSettings({
-                safeChat: !safeChat,
-              })
-            );
-          }}
-        >
-          <Icon
-            icon={faCheck}
-            size={18}
+    return (
+      <View style={[styles.controlsContainer]}>
+        <View style={[common.row, styles.row]}>
+          {typingUsers.length > 0 && (
+            <Text>
+              {typingUsers
+                .map((user) => user?.displayName || user?.email)
+                .join(", ")}{" "}
+              is typing...
+            </Text>
+          )}
+        </View>
+        <View style={[common.row, styles.row]}>
+          <CircleButton
+            icon={safeChat ? faShield : faShieldHeart}
+            onPress={handleSend}
+            onLongPress={activateSafeChat}
             color={safeChat ? colors.accent.primary : colors.text.secondary}
+            backgroundColor={colors.background.primary}
           />
-        </Pressable>
-        <Pressable
-          style={[
-            buttonStyles,
-            styles.controlButton,
-            {
-              backgroundColor: colors.background.primary,
-            },
-          ]}
-          onPress={() => {
-            showSentiment();
-          }}
-        >
-          <Icon icon={faGaugeSimple} size={18} color={colors.text.secondary} />
-        </Pressable>
-        <Pressable
-          style={[
-            buttonStyles,
-            styles.controlButton,
-            {
-              backgroundColor: colors.background.primary,
-            },
-          ]}
-          onPress={() => {
-            showResponseSuggestions();
-          }}
-        >
-          <Icon
-            icon={faWandMagicSparkles}
-            size={18}
+          <CircleButton
+            icon={faChartLine}
+            onPress={showSentiment}
             color={colors.text.secondary}
+            backgroundColor={colors.background.primary}
           />
-        </Pressable>
-        {/* <Pressable style={[buttonStyles, styles.controlButton]} onPress={() => {}, {
+          <CircleButton
+            icon={faBrain}
+            onPress={showResponseSuggestions}
+            color={colors.text.secondary}
+            backgroundColor={colors.background.primary}
+          />
+          <CircleButton
+            icon={faWandMagicSparkles}
+            onPress={goToTranslation}
+            color={colors.text.secondary}
+            backgroundColor={colors.background.primary}
+          />
+          {/* <Pressable style={[buttonStyles, styles.controlButton]} onPress={() => {}, {
     backgroundColor: colors.background.primary,
   }}>
           <Icon icon={faMicrophone} size={18} color={colors.text.secondary} />
         </Pressable> */}
-      </View>
+        </View>
 
-      <View style={[common.row, styles.row]}>
-        <TooltipOverlay
-          visible={!!tooltipContent}
-          onClose={() => setTooltipContent(null)}
-          anchorRef={inputRef}
-          title="Response Suggestions"
-        >
-          {tooltipContent}
-        </TooltipOverlay>
-        <TextInput
-          // ref={inputRef}
-          style={[
-            styles.input,
-            {
-              color: colors.text.primary,
-            },
-          ]}
-          value={input}
-          onChangeText={setInput}
-          placeholder={t("chat.typeMessage")}
-          placeholderTextColor={colors.neutral[400]}
-        />
-        <Button
-          onPress={() => handleSend()}
-          title={t("chat.send")}
-          variant="primary"
-        />
+        <View style={[common.row, styles.row]}>
+          <Modal
+            onClose={() => setTooltipContent(null)}
+            visible={!!tooltipContent}
+            transparent
+            animationType="fade"
+          >
+            {tooltipContent}
+          </Modal>
+          <TextInput
+            // inputRef={inputRef}
+            multiline
+            style={[styles.input]}
+            inputStyle={[
+              {
+                color: colors.text.primary,
+                borderColor: colors.neutral[300],
+                borderWidth: 1,
+              },
+            ]}
+            value={input}
+            onChangeText={setInput}
+            placeholder={t("chat.typeMessage")}
+            placeholderTextColor={colors.neutral[500]}
+          />
+          <Button
+            style={[styles.sendButton]}
+            onPress={() => handleSend()}
+            title={t("chat.send")}
+            variant="primary"
+          />
+        </View>
       </View>
-    </View>
-  );
-};
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   controlsContainer: {
@@ -315,20 +273,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
     width: "100%",
+    paddingBottom: 8,
   },
   row: {
     display: "flex",
-    // flexDirection: "row",
-    // alignItems: "center",
     width: "100%",
   },
   controlButton: {
     borderRadius: 100,
-
     paddingVertical: 10,
     paddingHorizontal: 10,
   },
-
   input: {
     flex: 1,
     borderRadius: 8,

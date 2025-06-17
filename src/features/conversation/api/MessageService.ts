@@ -1,17 +1,11 @@
-import { Message, MessageDTO } from "@common/models/chat/message";
+import { Message, MessageDTO } from "@common/models/conversation/message";
 import { FirestoreCollections } from "@/services/firebase/collections";
 import { FirebaseService } from "@/services/firebase/data/FirebaseService";
-import { InterpretationClient } from "@/features/interpretation/api/InterpretationClient";
-import { Model } from "@common/types";
-import { InterpretationService } from "@/features/interpretation/api/InterpretationService";
-import { v4 as uuidv4 } from "uuid";
-import { Timestamp } from "firebase/firestore";
 import { ConversationService } from "./ConversationService";
-
-import { MessageMapper } from "@common/models/chat/mappers";
+import { MessageMapper } from "@common/models/conversation";
 import { BaseService } from "@/services/base/BaseService";
 import { AuthService } from "@/features/auth/api/service";
-import { Conversation } from "@common/models/chat/conversation";
+import { Conversation } from "@common/models/conversation/conversation";
 import { User } from "firebase/auth";
 
 interface MessageServiceOptions {
@@ -44,17 +38,9 @@ export class MessageService extends BaseService<
     user: User,
     input: string
   ) {
-    const updatedUnreadCounts = { ...conversation.unreadCounts };
-
-    conversation.userIds.forEach((userId) => {
-      if (userId !== user.uid) {
-        updatedUnreadCounts[userId] = (updatedUnreadCounts[userId] || 0) + 1;
-      }
-    });
-
     return await this.conversationService.update(conversation.id, {
       lastMessageText: input,
-      unreadCounts: updatedUnreadCounts,
+      numMessages: (conversation.numMessages || 0) + 1,
     });
   }
 

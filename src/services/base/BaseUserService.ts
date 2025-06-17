@@ -3,10 +3,10 @@ import { BaseService, BaseServiceOptions } from "./BaseService";
 import { FirebaseService } from "../firebase/data/FirebaseService";
 import { AuthService } from "@/features/auth/api/service";
 
-export class BaseUserService<
+export abstract class BaseUserService<
   T extends BaseModel,
   DTO = any,
-  GeneralOptions extends BaseServiceOptions = BaseServiceOptions
+  GeneralOptions extends BaseServiceOptions = BaseServiceOptions,
 > extends BaseService<T, DTO, GeneralOptions> {
   constructor(
     protected readonly firebaseService: FirebaseService,

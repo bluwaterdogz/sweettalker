@@ -1,6 +1,6 @@
 import { TranslationService } from "@/features/translation/api/service";
 import { ProfileService } from "@/features/profile/api/service";
-import { BillingService } from "@/features/billing/api/BillingService";
+// import { BillingService } from "@/features/billing/api/BillingService";
 import { AuthService } from "@/features/auth/api/service";
 import { AdsService } from "@/features/advertisement/api/service";
 import { CheckInService } from "@/features/check-in/api/CheckInService";
@@ -8,6 +8,9 @@ import { ConversationService } from "@/features/conversation/api/ConversationSer
 import { MessageService } from "@/features/conversation/api/MessageService";
 import { ConnectionService } from "@/features/contacts/api/ConnectionService";
 import { ContactService } from "@/features/contacts/api/ContactService";
+import { ConversationUserDetailService } from "@/features/conversation/api/ConversationUserDetailService";
+import { UserPrivateConversationDetailService } from "@/features/conversation/api/UserPrivateConversationDetailService";
+// import { BlockContactService } from "@/features/contacts/api/BlockContactService";
 
 export interface Services {
   translationService: TranslationService;
@@ -20,4 +23,7 @@ export interface Services {
   messageService: MessageService;
   connectionService: ConnectionService;
   contactService: ContactService;
+  conversationUserDetailService: ConversationUserDetailService;
+  userPrivateConversationDetailService: UserPrivateConversationDetailService;
+  // blockContactService: BlockContactService;
 }

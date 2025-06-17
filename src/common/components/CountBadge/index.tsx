@@ -1,13 +1,23 @@
 import { useTheme } from "@/common/theme/hooks/useTheme";
 import { ReactNode } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ViewStyle } from "react-native";
 
 interface CountBadgeProps {
   count: ReactNode;
   size?: number;
   color?: string;
+  style?: ViewStyle;
+  top?: number;
+  left?: number;
 }
-export const CountBadge = ({ count, size = 48, color }: CountBadgeProps) => {
+export const CountBadge = ({
+  count,
+  size = 48,
+  top = 30,
+  left = 40,
+  color,
+  style,
+}: CountBadgeProps) => {
   const { colors } = useTheme();
 
   return (
@@ -15,8 +25,8 @@ export const CountBadge = ({ count, size = 48, color }: CountBadgeProps) => {
       style={[
         styles.avatarWrapper,
         {
-          left: 40,
-          top: 30,
+          left,
+          top,
           zIndex: 20,
           position: "absolute",
           width: size * 0.4,
@@ -30,7 +40,13 @@ export const CountBadge = ({ count, size = 48, color }: CountBadgeProps) => {
         },
       ]}
     >
-      <Text style={{ fontWeight: "bold", color: "#444", fontSize: 10 }}>
+      <Text
+        style={{
+          fontWeight: "bold",
+          color: colors.background.primary,
+          fontSize: 10,
+        }}
+      >
         {count}
       </Text>
     </View>

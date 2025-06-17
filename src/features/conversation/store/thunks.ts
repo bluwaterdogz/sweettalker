@@ -1,7 +1,9 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ThunkAPI } from "@/store/types";
-import { Conversation, ConversationMapper } from "@common/models/chat";
+import { Conversation, ConversationMapper } from "@common/models/conversation";
 import { serializeError } from "@/services/base/errors/utils/serializeError";
+import { ConversationUserDetails } from "@common/models/conversation/conversation_user_details";
+import { UserPrivateConversationDetails } from "@common/models/conversation/user_private_conversation_details";
 
 interface CreateConversationParams {
   userIds: string[];
@@ -22,6 +24,7 @@ export const addConversation = createAsyncThunk<
       const conversation = {
         userIds,
         options: {},
+        numMessages: 0,
       };
       const convo = await services.conversationService.create(conversation);
       return ConversationMapper.map(convo);
@@ -43,6 +46,63 @@ export const updateConversation = createAsyncThunk<
   ) => {
     try {
       await services.conversationService.update(conversation.id, conversation);
+    } catch (error) {
+      return rejectWithValue(serializeError(error));
+    }
+  }
+);
+
+export const updateConversationUserDetails = createAsyncThunk<
+  void,
+  Partial<ConversationUserDetails> & { conversationId: string; userId: string },
+  ThunkAPI
+>(
+  "conversation/updateConversationUserDetails",
+  async (
+    payload: Partial<ConversationUserDetails> & {
+      conversationId: string;
+      userId: string;
+    },
+    { rejectWithValue, extra: { services } }
+  ) => {
+    try {
+      const { conversationId, userId, ...conversationUserDetail } = payload;
+      await services.conversationUserDetailService.updatewithCustomId(
+        conversationUserDetail,
+        {
+          conversationId,
+          userId,
+        }
+      );
+    } catch (error) {
+      return rejectWithValue(serializeError(error));
+    }
+  }
+);
+
+export const updateUserPrivateConversationDetails = createAsyncThunk<
+  void,
+  Partial<UserPrivateConversationDetails> & {
+    conversationId: string;
+  },
+  ThunkAPI
+>(
+  "conversation/updateUserPrivateConversationDetails",
+  async (
+    payload: Partial<UserPrivateConversationDetails> & {
+      conversationId: string;
+    },
+    { rejectWithValue, extra: { services } }
+  ) => {
+    try {
+      const { conversationId, ...conversationPrivateUserDetail } = payload;
+      await services.userPrivateConversationDetailService.update(
+        "",
+        conversationPrivateUserDetail,
+        {
+          conversationId,
+        }
+      );
     } catch (error) {
       return rejectWithValue(serializeError(error));
     }

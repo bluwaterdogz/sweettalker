@@ -1,8 +1,8 @@
 import { FirestoreCollections } from "@/services/firebase/collections";
 import { FirebaseService } from "@/services/firebase/data/FirebaseService";
-import { InterpretationClient } from "@/features/interpretation/api/InterpretationClient";
+import { InterpretationClient } from "@/features/translation/api/InterpretationClient";
 import { withErrorHandling } from "@/services/base/errors/utils/withErrorHandling";
-import { InterpretationService } from "@/features/interpretation/api/InterpretationService";
+import { InterpretationService } from "@/features/translation/api/InterpretationService";
 import { TranslationOptions } from "@common/models/translation/translation-options";
 import { AuthService } from "@/features/auth/api/service";
 import {
@@ -15,10 +15,10 @@ import {
   UserMessageDTO,
   UserMessageMapper,
 } from "@common/models/interpretation/user-message";
-import { MessageOptimalResult } from "@common/models/chat/message-optimal-result";
-import { ConversationSentiment } from "@common/models/chat/conversation-sentiment";
-import { Message } from "@common/models/chat/message";
-import { ResponseSuggestion } from "@common/models/chat/response-suggestion";
+import { MessageOptimalResult } from "@common/models/conversation/message-optimal-result";
+import { ConversationSentiment } from "@common/models/conversation/conversation-sentiment";
+import { Message } from "@common/models/conversation/message";
+import { ResponseSuggestion } from "@common/models/conversation/response-suggestion";
 import { ResponseSuggestionsPromptOptions } from "@common/query/response-suggestion-prompt-options";
 
 export class TranslationService extends InterpretationService<
@@ -68,6 +68,9 @@ export class TranslationService extends InterpretationService<
     return await this.client.isMessageOptimal(message);
   }
 
+  @withErrorHandling({
+    errorMessage: `Error getting conversation sentiment`,
+  })
   async getConversationSentiment(
     messages: Message[],
     userId: string
@@ -79,6 +82,9 @@ export class TranslationService extends InterpretationService<
     return await this.client.getConversationSentiment(formattedMessages);
   }
 
+  @withErrorHandling({
+    errorMessage: `Error getting response suggestions`,
+  })
   async getResponseSuggestions(
     messages: Message[],
     userId: string,
@@ -96,6 +102,14 @@ export class TranslationService extends InterpretationService<
   }
 }
 
+/**
+ * Formats recent messages into a list of strings for the prompt
+ * @param messages - The messages to format
+ * @param userId - The user ID of the current user (for formatting the messages)
+ * @param options.numRecent - Number of recent messages to include
+ * @param options.numPerUser - Number of messages per user to include
+ * @returns A list of strings for the prompt
+ */
 function formatRecentMessages(
   messages: Message[],
   userId: string,
@@ -138,12 +152,16 @@ function formatRecentMessages(
     (a, b) => a.createdAt.toDate().getTime() - b.createdAt.toDate().getTime()
   );
 
-  return finalSorted.map(
-    (msg) =>
-      msg.createdAt.toDate().toISOString() +
-      " " +
-      (msg.createdBy === userId ? "You" : "Partner") +
-      ": " +
-      msg.displayText
-  );
+  return finalSorted
+    .sort((a, b) => a.createdAt.nanoseconds - b.createdAt.nanoseconds)
+    .map((msg) => {
+      const speaker = msg.authorId === userId ? "You" : "Them";
+      const time = msg.createdAt
+        .toDate()
+        .toISOString()
+        .slice(0, 16)
+        .replace("T", " ");
+      // const tone = msg.tone ? ` [${msg.tone}]` : ""; // optional tone tag if available
+      return `[${time}] ${speaker}: ${msg.displayText}`;
+    });
 }

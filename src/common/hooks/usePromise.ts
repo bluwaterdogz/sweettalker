@@ -8,7 +8,7 @@ interface PromiseState<T> {
 }
 
 interface UsePromiseResult<T> extends PromiseState<T> {
-  execute: (...args: any[]) => Promise<void>;
+  refresh: (...args: any[]) => Promise<void>;
   reset: () => void;
 }
 
@@ -97,7 +97,7 @@ export function usePromise<T>(
 
   return {
     ...state,
-    execute: throttledExecute,
+    refresh: throttledExecute,
     reset,
   };
 }

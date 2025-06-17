@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { View, Text, StyleSheet, FlatList, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Button } from "@/common/components/Button";
 import { useTheme } from "@/common/theme/hooks/useTheme";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
@@ -21,9 +21,8 @@ import { useMapConnectionsToContacts } from "../hooks/useMapConnectionsToContact
 
 export const PendingContactsList = () => {
   const { colors } = useTheme();
-  const { t } = useTranslation();
   const { user } = useUser();
-  const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const navigation = useAppNavigation();
   const { connectionService, contactService } = useServices();
 
@@ -31,6 +30,7 @@ export const PendingContactsList = () => {
     hasFetched: hasFetchedConnections,
     loading: connectionLoading,
     result: connections = [],
+    // TODO: error failing silently
   } = useSubscribeFirestore<Connection[]>((onData, onError) =>
     connectionService.subscribe(onData, onError, {
       query: {
@@ -41,8 +41,8 @@ export const PendingContactsList = () => {
             value: "pending",
           },
           {
-            field: "userIds",
-            operator: "array-contains",
+            field: "requesterId",
+            operator: "!=",
             value: user?.uid,
           },
         ],
@@ -63,7 +63,10 @@ export const PendingContactsList = () => {
           ],
         },
       }),
-    { enabled: hasFetchedConnections && connections.length > 0 }
+    {
+      enabled: hasFetchedConnections && connections.length > 0,
+      deps: [connections],
+    }
   );
 
   const { contactsWithConnections } = useMapConnectionsToContacts({

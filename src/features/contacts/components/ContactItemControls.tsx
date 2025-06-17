@@ -24,7 +24,7 @@ export const ContactItemControls = ({ contact }: ContactItemControlsProps) => {
 
   const onCreateConnection = (contact: ContactWithConnection) => {
     const connection = contact.connection;
-    if (connection && connection.status == null) {
+    if (!connection || connection.status == null) {
       dispatch(
         createConnection({
           requesterId: user!.uid,
@@ -58,10 +58,13 @@ export const ContactItemControls = ({ contact }: ContactItemControlsProps) => {
       );
       conversationId = await conversationService.getConversationId(contact.id);
     }
-
-    navigation.navigate("Conversation", {
-      conversationId: conversationId,
-    });
+    if (conversationId) {
+      navigation.navigate("Conversation", {
+        conversationId: conversationId,
+      });
+    } else {
+      console.error("Conversation not created");
+    }
   };
 
   const handleBlockUser = (contact: ContactWithConnection) => {
@@ -84,7 +87,7 @@ export const ContactItemControls = ({ contact }: ContactItemControlsProps) => {
 
   return (
     <>
-      <Button title="Block" onPress={() => handleBlockUser(contact)} />
+      {/* <Button title="Block" onPress={() => handleBlockUser(contact)} /> */}
 
       {isPending && isRequester && (
         <Button
